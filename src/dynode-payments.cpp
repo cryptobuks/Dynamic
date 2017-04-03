@@ -724,6 +724,12 @@ bool CDynodePaymentVote::IsValid(CNode* pnode, int nValidationHeight, std::strin
 
     int nRank = dnodeman.GetDynodeRank(vinDynode, nBlockHeight - 101, nMinRequiredProtocol, false);
 
+    if(nRank == -1) {
+        LogPrint("dnpayments", "CDynodePaymentVote::IsValid -- Can't calculate rank for Dynode %s\n",
+                    vinDynode.prevout.ToStringShort());
+        return false;
+    }
+
     if(nRank > DNPAYMENTS_SIGNATURES_TOTAL) {
         // It's common to have Dynodes mistakenly think they are in the top 10
         // We don't want to print all of these messages in normal mode, debug mode should print though
