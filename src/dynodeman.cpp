@@ -1302,9 +1302,16 @@ void CDynodeMan::ProcessVerifyBroadcast(CNode* pnode, const CDynodeVerification&
     }
 
     int nRank = GetDynodeRank(dnv.vin2, dnv.nBlockHeight, MIN_POSE_PROTO_VERSION);
-    if(nRank < MAX_POSE_RANK) {
-        LogPrint("Dynode", "DynodeMan::ProcessVerifyBroadcast -- Dynode is not in top %d, current rank %d, peer=%d\n",
-                    (int)MAX_POSE_RANK, nRank, pnode->id);
+
+    if (nRank == -1) {
+        LogPrint("dynode", "CDynodeMan::ProcessVerifyBroadcast -- Can't calculate rank for Dynode %s\n",
+                    dnv.vin2.prevout.ToStringShort());
+        return;
+    }
+
+    if(nRank > MAX_POSE_RANK) {
+        LogPrint("dynode", "CDynodeMan::ProcessVerifyBroadcast -- Dynode %s is not in top %d, current rank %d, peer=%d\n",
+                    dnv.vin2.prevout.ToStringShort(), (int)MAX_POSE_RANK, nRank, pnode->id);
         return;
     }
 
