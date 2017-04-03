@@ -1563,14 +1563,15 @@ bool CDynodeMan::IsWatchdogActive()
     return (GetTime() - nLastWatchdogVoteTime) <= DYNODE_WATCHDOG_MAX_SECONDS;
 }
 
-void CDynodeMan::AddGovernanceVote(const CTxIn& vin, uint256 nGovernanceObjectHash)
+bool CDynodeMan::AddGovernanceVote(const CTxIn& vin, uint256 nGovernanceObjectHash)
 {
     LOCK(cs);
     CDynode* pDN = Find(vin);
     if(!pDN)  {
-        return;
+        return false;
     }
     pDN->AddGovernanceVote(nGovernanceObjectHash);
+    return true;
 }
 
 void CDynodeMan::RemoveGovernanceObject(uint256 nGovernanceObjectHash)
