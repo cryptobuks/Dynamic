@@ -6,6 +6,11 @@
 * Fix potential race condition in vote processing
 * Multiple vote fix
 * Update const usages in crypter.cpp/h
+* Refactor the fill_segment code in the Argon2d core
+* Fix bad pointer copy when using custom in Argon2d core
+* Eliminate redundant function incompatible with Win in black2-impl.h
+* Fix memory leak in fill_memory_blocks in Argon2d core
+
 
 **Dynamic v1.3.0.0**	
 
