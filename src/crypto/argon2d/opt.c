@@ -67,7 +67,7 @@ void fill_block(__m128i *state, const block *ref_block, block *next_block, int w
 static void next_addresses(block *address_block, block *input_block) {
     /*Temporary zero-initialized blocks*/
     __m128i zero_block[ARGON2_OWORDS_IN_BLOCK];
-    __m128i zero_block[ARGON2_OWORDS_IN_BLOCK];
+    __m128i zero2_block[ARGON2_OWORDS_IN_BLOCK];
 
     memset(zero_block, 0, sizeof(zero_block));
     memset(zero2_block, 0, sizeof(zero2_block));
@@ -83,7 +83,7 @@ static void next_addresses(block *address_block, block *input_block) {
 }
 
 void fill_segment(const argon2_instance_t *instance, argon2_position_t position) {
-                  argon2_position_t position) {
+
     block *ref_block = NULL, *curr_block = NULL;
     block address_block, input_block;
     uint64_t pseudo_rand, ref_index, ref_lane;
@@ -168,7 +168,6 @@ void fill_segment(const argon2_instance_t *instance, argon2_position_t position)
         /* 2 Creating a new block */
         ref_block = instance->memory + instance->lane_length * ref_lane + ref_index;
         curr_block = instance->memory + curr_offset;
-    }
 
         if(0 == position.pass) {
             fill_block(state, ref_block, curr_block, 0);
