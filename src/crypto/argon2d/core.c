@@ -260,26 +260,28 @@ int fill_memory_blocks(argon2_instance_t *instance) {
     uint32_t r, s;
     argon2_thread_handle_t *thread = NULL;
     argon2_thread_data *thr_data = NULL;
+    int rc = ARGON2_OK;
 
     if (instance == NULL || instance->lanes == 0) {
-        return ARGON2_THREAD_FAIL;
+         rc = ARGON2_THREAD_FAIL;
+        goto fail;
     }
 
     /* 1. Allocating space for threads */
     thread = calloc(instance->lanes, sizeof(argon2_thread_handle_t));
     if (thread == NULL) {
-        return ARGON2_MEMORY_ALLOCATION_ERROR;
+        rc = ARGON2_MEMORY_ALLOCATION_ERROR;
+        goto fail;
     }
 
     thr_data = calloc(instance->lanes, sizeof(argon2_thread_data));
     if (thr_data == NULL) {
-        free(thread);
-        return ARGON2_MEMORY_ALLOCATION_ERROR;
+        rc = ARGON2_MEMORY_ALLOCATION_ERROR;
+        goto fail;
     }
 
     for (r = 0; r < instance->passes; ++r) {
         for (s = 0; s < ARGON2_SYNC_POINTS; ++s) {
-            int rc;
             uint32_t l;
 
             /* 2. Calling threads */
@@ -299,14 +301,12 @@ int fill_memory_blocks(argon2_instance_t *instance) {
                 position.lane = l;
                 position.slice = (uint8_t)s;
                 position.index = 0;
-                thr_data[l].instance_ptr =
-                    instance; /* preparing the thread input */
-                memcpy(&(thr_data[l].pos), &position,
-                       sizeof(argon2_position_t));
-                rc = argon2_thread_create(&thread[l], &fill_segment_thr,
-                                          (void *)&thr_data[l]);
-                if (rc) {
-                    return ARGON2_THREAD_FAIL;
+                thr_data[l].instance_ptr = instance; 
+                /* preparing the thread input */
+                memcpy(&(thr_data[l].pos), &position, sizeof(argon2_position_t));
+                if (argon2_thread_create(&thread[l], &fill_segment_thr, (void *)&thr_data[l])) {
+                    rc = ARGON2_THREAD_FAIL;
+                    goto fail;
                 }
 
                 /* fill_segment(instance, position); */
@@ -314,11 +314,10 @@ int fill_memory_blocks(argon2_instance_t *instance) {
             }
 
             /* 3. Joining remaining threads */
-            for (l = instance->lanes - instance->threads; l < instance->lanes;
-                 ++l) {
-                rc = argon2_thread_join(thread[l]);
-                if (rc) {
-                    return ARGON2_THREAD_FAIL;
+            for (l = instance->lanes - instance->threads; l < instance->lanes; ++l) {
+                if (argon2_thread_join(thread[l])) {
+                    rc = ARGON2_THREAD_FAIL;
+                    goto fail;
                 }
             }
         }
@@ -328,13 +327,14 @@ int fill_memory_blocks(argon2_instance_t *instance) {
 #endif
     }
 
+fail:
     if (thread != NULL) {
         free(thread);
     }
     if (thr_data != NULL) {
         free(thr_data);
     }
-    return ARGON2_OK;
+    return rc;
 }
 
 int validate_inputs(const argon2_context *context) {
