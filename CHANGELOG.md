@@ -1,3 +1,12 @@
+**Dynamic v1.4.0.0**
+
+* Inline crypter.cpp with Bitcoin 0.13
+* Reject payment vote if Dynode rank cannot be calculated
+* Fix ProcessVerifyBroadcast
+* Fix potential race condition in vote processing
+* Multiple vote fix
+* Update const usages in crypter.cpp/h
+
 **Dynamic v1.3.0.0**	
 
 * c++11:Backport from bitcoin-core: don't throw from the reverselock destructor
