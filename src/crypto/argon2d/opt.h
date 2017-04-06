@@ -25,24 +25,14 @@
 #include <emmintrin.h>
 
 /*
- * Function fills a new memory block. Differs from the
+  * Function fills a new memory block and optionally XORs the old block over the new one.
+ * Memory must be initialized.
  * @param state Pointer to the just produced block. Content will be updated(!)
  * @param ref_block Pointer to the reference block
- * @param next_block Pointer to the block to be constructed
+ * @param next_block Pointer to the block to be XORed over. May coincide with @ref_block
+ * @param with_xor Whether to XOR into the new block (1) or just overwrite (0)
  * @pre all block pointers must be valid
  */
-void fill_block(__m128i *state, const uint8_t *ref_block, uint8_t *next_block);
-
-/*
- * Generate pseudo-random values to reference blocks in the segment and puts
- * them into the array
- * @param instance Pointer to the current instance
- * @param position Pointer to the current position
- * @param pseudo_rands Pointer to the array of 64-bit values
- * @pre pseudo_rands must point to @a instance->segment_length allocated values
- */
-void generate_addresses(const argon2_instance_t *instance,
-                        const argon2_position_t *position,
-                        uint64_t *pseudo_rands);
+void fill_block(__m128i *s, const block *ref_block, block *next_block, int with_xor);
 
 #endif /* ARGON2_OPT_H */

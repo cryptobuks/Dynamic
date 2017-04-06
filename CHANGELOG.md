@@ -1,3 +1,18 @@
+**Dynamic v1.4.0.0**
+
+* Inline crypter.cpp with Bitcoin 0.13
+* Reject payment vote if Dynode rank cannot be calculated
+* Fix ProcessVerifyBroadcast
+* Fix potential race condition in vote processing
+* Multiple vote fix
+* Update const usages in crypter.cpp/h
+* Refactor the fill_segment code in the Argon2d core
+* Fix bad pointer copy when using custom in Argon2d core
+* Eliminate redundant function incompatible with Win in black2-impl.h
+* Fix memory leak in fill_memory_blocks in Argon2d core
+* Inline sync.cpp/h with Bitcoin 0.14.99
+
+
 **Dynamic v1.3.0.1**
 
 * Bump Protocols to lock out nodes at or below v1.2 to prevent any forks
