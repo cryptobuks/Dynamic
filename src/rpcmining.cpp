@@ -534,11 +534,11 @@ UniValue getwork(const UniValue& params, bool fHelp)
 
         pblock->nTime = pdata->nTime;
         pblock->nNonce = pdata->nNonce;
-        CMutableTransaction newTx;
-        // Use CMutableTransaction when creating a new transaction instead of CTransaction.  CTransaction public variables are all const now.
-        newTx.vin[0].scriptSig = mapNewBlock[pdata->hashMerkleRoot].second; // Oh, why? because vin is const in CTransaction now.  
-        pblock->vtx[0] = newTx;
-        pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
+
+		CMutableTransaction newTx(pblock->vtx[0]);
+		newTx.vin[0].scriptSig = mapNewBlock[pdata->hashMerkleRoot].second;
+		pblock->vtx[0] = newTx;
+		pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
 
         assert(pwalletMain != NULL);
         const CChainParams& chainParams = Params();
