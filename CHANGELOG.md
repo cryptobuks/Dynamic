@@ -13,20 +13,24 @@
 * Inline sync.cpp/h with Bitcoin 0.13
 * Inline GBT with Bitcoin 0.13
 * Add scam warning to RPC console
+* Multiple watchdog rate check
+* Modify DynodeRateCheck to support updating buffers only on failure
+* Update rate check buffer only when fAddToSeen is true
+
 
 **Dynamic v1.3.0.1**
 
 * Bump Protocols to lock out nodes at or below v1.2 to prevent any forks
 
 
-**Dynamic v1.3.0.0**	
+**Dynamic v1.3.0.0**
 
 * c++11:Backport from bitcoin-core: don't throw from the reverselock destructor
 * InitError instead of throw on failure
 * Hard Fork at block 300,000 for Delta difficulty retarget algorithm
 
 
-**Dynamic v1.2.0.0**	
+**Dynamic v1.2.0.0**
 
 * Make RelayWalletTransaction attempt to AcceptToMemoryPool
 * Update tests for Byteswap
@@ -69,22 +73,23 @@
 * Bump protocol versions to 70000
 * Added IPv4 seed nodes to chainparamsseeds.h
 
-**Dynamic v1.1.0.0**		
-		
-* Inline with BTC 0.12		
-* HD Wallet Code Improvements		
-* Remove/Replace Boost usage for c++11		
-* Do not shadow member variables in httpserver		
-* Update dbwrapper_tests.cpp		
-* Access WorkQueue::running only within the cs lock		
-* Use BIP32_HARDENED_KEY_LIMIT		
-* Update NULL to use nullptr in GetWork & GetBlockTemplate		
-* Few changes to governance rpc		
-* Safety check in CInstantSend::SyncTransaction		
-* Full path in 'failed to load cache' warnings		
-* Refactor privateSendSigner		
-* Net Fixes/DNS Seed Fix		
-* Don't add non-current watchdogs to seen map		
-* [RPC] remove the option of having multiple timer interfaces		
-* Fix memory leak in httprpc.cpp		
+
+**Dynamic v1.1.0.0**
+
+* Inline with BTC 0.12
+* HD Wallet Code Improvements
+* Remove/Replace Boost usage for c++11
+* Do not shadow member variables in httpserver
+* Update dbwrapper_tests.cpp
+* Access WorkQueue::running only within the cs lock
+* Use BIP32_HARDENED_KEY_LIMIT
+* Update NULL to use nullptr in GetWork & GetBlockTemplate
+* Few changes to governance rpc
+* Safety check in CInstantSend::SyncTransaction
+* Full path in 'failed to load cache' warnings
+* Refactor privateSendSigner
+* Net Fixes/DNS Seed Fix
+* Don't add non-current watchdogs to seen map
+* [RPC] remove the option of having multiple timer interfaces
+* Fix memory leak in httprpc.cpp
 * Make KEY_SIZE a compile-time constant
