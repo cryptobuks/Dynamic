@@ -12,6 +12,12 @@
 * Fix memory leak in fill_memory_blocks in Argon2d core
 * Inline sync.cpp/h with Bitcoin 0.14.99
 
+
+**Dynamic v1.3.0.1**
+
+* Bump Protocols to lock out nodes at or below v1.2 to prevent any forks
+
+
 **Dynamic v1.3.0.0**	
 
 * c++11:Backport from bitcoin-core: don't throw from the reverselock destructor
