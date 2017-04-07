@@ -224,6 +224,7 @@ void PrepareShutdown()
     StopRPC();
     StopHTTPServer();
 #ifdef ENABLE_WALLET
+    ShutdownRPCMining();
     if (pwalletMain)
         pwalletMain->Flush(false);
 #endif
@@ -1814,6 +1815,10 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // ********************************************************* Step 12: start node
 
+#ifdef ENABLE_WALLET
+    // InitRPCMining is needed here so getwork/getblocktemplate in the GUI debug console works properly. (Ya think?)
+    InitRPCMining();
+#endif
 
     if (!strErrors.str().empty())
         return InitError(strErrors.str());

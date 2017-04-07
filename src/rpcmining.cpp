@@ -535,14 +535,14 @@ UniValue getwork(const UniValue& params, bool fHelp)
         pblock->nTime = pdata->nTime;
         pblock->nNonce = pdata->nNonce;
 
-	CMutableTransaction newTx(pblock->vtx[0]);
-	newTx.vin[0].scriptSig = mapNewBlock[pdata->hashMerkleRoot].second;
-	pblock->vtx[0] = newTx;
-	pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
+		CMutableTransaction newTx(pblock->vtx[0]);
+		newTx.vin[0].scriptSig = mapNewBlock[pdata->hashMerkleRoot].second;
+		pblock->vtx[0] = newTx;
+		pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
 
         assert(pwalletMain != NULL);
-        const CChainParams& chainParams = Params();
-        return CheckWork(chainParams, pblock, *pwalletMain, *pMiningKey);
+        
+		return CheckWork(Params(), pblock, *pwalletMain, *pMiningKey);
     }
 }
 
