@@ -319,6 +319,8 @@ extern UniValue getspentinfo(const UniValue& params, bool fHelp);
 bool StartRPC();
 void InterruptRPC();
 void StopRPC();
+extern void InitRPCMining();
+extern void ShutdownRPCMining();
 std::string JSONRPCExecBatch(const UniValue& vReq);
 
 #endif // DYNAMIC_RPCSERVER_H
