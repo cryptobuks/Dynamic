@@ -7,11 +7,13 @@
 
 #include "base58.h"
 #include "clientversion.h"
+#include "dynodeman.h"
 #ifdef ENABLE_WALLET
 #include "dynode-sync.h"
 #endif
 #include "init.h"
 #include "main.h"
+#include "miner.h"
 #include "net.h"
 #include "netbase.h"
 #include "rpcserver.h"
@@ -168,11 +170,20 @@ UniValue dnsync(const UniValue& params, bool fHelp)
         return objStatus;
     }
 
-    if(strMode == "next")
+    if(strMode == "next" && dnodeman.CountDynodes() > 0 && dHashesPerSec == 0.00)
     {
         dynodeSync.SwitchToNextAsset();
         return "sync updated to " + dynodeSync.GetAssetName();
     }
+    else 
+    if(strMode == "next" && (Params().NetworkIDString() != CBaseChainParams::MAIN && dnodeman.CountDynodes() >= 0))
+    {
+        dynodeSync.SwitchToNextAsset();
+        return "sync updated to " + dynodeSync.GetAssetName();
+    }
+    else
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND, "'dnsync next' cannot be used whilst mining");
+
 
     if(strMode == "reset")
     {
