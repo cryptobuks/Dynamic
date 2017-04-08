@@ -182,7 +182,7 @@ UniValue dnsync(const UniValue& params, bool fHelp)
         return "sync updated to " + dynodeSync.GetAssetName();
     }
     else
-        throw JSONRPCError(RPC_METHOD_NOT_FOUND, "'dnsync next' cannot be used whilst mining");
+        throw JSONRPCError(RPC_INVALID_REQUEST, "'dnsync next' cannot be used whilst mining");
 
 
     if(strMode == "reset")
