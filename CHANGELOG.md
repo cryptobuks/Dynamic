@@ -16,6 +16,7 @@
 * Multiple watchdog rate check
 * Modify DynodeRateCheck to support updating buffers only on failure
 * Update rate check buffer only when fAddToSeen is true
+* Amend Venerability with 'dnsync next'
 
 
 **Dynamic v1.3.0.1**
