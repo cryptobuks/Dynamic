@@ -46,7 +46,7 @@
 #include "consensus/validation.h"
 #include "validationinterface.h"
 #include "versionbits.h"
-#include "checkforks.h"
+#include "dynamicparams.h"
 
 #include <atomic>
 #include <sstream>

@@ -12,7 +12,6 @@
 #include "primitives/block.h"
 #include "chain.h"
 #include "chainparams.h"
-#include "checkforks.h"
 #include "main.h"
 #include "uint256.h"
 #include "util.h"
@@ -29,7 +28,6 @@ const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex)
 unsigned int GetNextWorkRequired(const INDEX_TYPE pindexLast, const BLOCK_TYPE block, const Consensus::Params& params)
 {
     if (CheckForkIsTrue(DELTA_RETARGET, pindexLast)) {
-
         unsigned int initalBlock = params.nUpdateDiffAlgoHeight;
         int64_t nRetargetTimespan = params.nPowTargetSpacing;
         const unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
@@ -190,7 +188,6 @@ unsigned int GetNextWorkRequired(const INDEX_TYPE pindexLast, const BLOCK_TYPE b
             SET_COMPACT(bnNew, nProofOfWorkLimit);
 
         return GET_COMPACT(bnNew);
-
     } else { return LegacyRetargetBlock(pindexLast, block, params); }
 }
 

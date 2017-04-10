@@ -137,13 +137,6 @@ static const unsigned int MAX_BLOCKS_TO_ANNOUNCE = 12;
 /** Maximum number of unconnecting headers announcements before DoS score */
 static const int MAX_UNCONNECTING_HEADERS = 10;
 
-//Dynamic Constants
-static const CAmount MIN_TXOUT_AMOUNT = MIN_TX_FEE;
-static const CAmount BLOCKCHAIN_INIT_REWARD = COIN * 0;
-static const CAmount PHASE_1_POW_REWARD = COIN * 1;
-static const CAmount PHASE_1_DYNODE_PAYMENT = COIN * 0.382;
-static const CAmount PHASE_2_DYNODE_PAYMENT = COIN * 0.618;
-
 struct BlockHasher
 {
     size_t operator()(const uint256& hash) const { return hash.GetCheapHash(); }

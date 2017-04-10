@@ -15,10 +15,14 @@
 #include <util.h>
 #include <stdint.h>
 
+#include "dynamicparams.h"
+
 class arith_uint256;
 class CBlockHeader;
 class CBlockIndex;
 class uint256;
+
+// Additonal Macros for PoW Diff Algo
 
 #define PERCENT_FACTOR 100
 

@@ -78,7 +78,7 @@ DYNAMIC_CORE_H = \
   cachemultimap.h \
   chain.h \
   chainparams.h \
-  checkforks.h \
+  dynamicparams.h \
   chainparamsbase.h \
   chainparamsseeds.h \
   checkpoints.h \
@@ -205,11 +205,11 @@ libdynamic_server_a_SOURCES = \
   bloom.cpp \
   chain.cpp \
   checkpoints.cpp \
-  checkforks.cpp \
   httprpc.cpp \
   httpserver.cpp \
   init.cpp \
   dbwrapper.cpp \
+  dynamicparams.cpp \
   governance.cpp \
   governance-classes.cpp \
   governance-object.cpp \
@@ -434,7 +434,7 @@ dynamic_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
 
 # dynamic-tx binary #
-dynamic_tx_SOURCES = dynamic-tx.cpp
+dynamic_tx_SOURCES = dynamic-tx.cpp dynamicparams.cpp
 dynamic_tx_CPPFLAGS = $(AM_CPPFLAGS) $(DYNAMIC_INCLUDES)
 dynamic_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 dynamic_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
