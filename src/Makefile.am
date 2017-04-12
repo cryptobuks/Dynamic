@@ -73,11 +73,14 @@ DYNAMIC_CORE_H = \
   amount.h \
   arith_uint256.h \
   base58.h \
+  bip39.h \
+  bip39_english.h \
   bloom.h \
   cachemap.h \
   cachemultimap.h \
   chain.h \
   chainparams.h \
+  dynamicparams.h \
   chainparamsbase.h \
   chainparamsseeds.h \
   checkpoints.h \
@@ -208,6 +211,7 @@ libdynamic_server_a_SOURCES = \
   httpserver.cpp \
   init.cpp \
   dbwrapper.cpp \
+  dynamicparams.cpp \
   governance.cpp \
   governance-classes.cpp \
   governance-object.cpp \
@@ -263,6 +267,7 @@ libdynamic_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(DYNAMIC_INCLUDES)
 libdynamic_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libdynamic_wallet_a_SOURCES = \
   activedynode.cpp \
+  bip39.cpp \
   privatesend.cpp \
   psnotificationinterface.cpp \
   privatesend-relay.cpp \
@@ -432,7 +437,7 @@ dynamic_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
 
 # dynamic-tx binary #
-dynamic_tx_SOURCES = dynamic-tx.cpp
+dynamic_tx_SOURCES = dynamic-tx.cpp dynamicparams.cpp
 dynamic_tx_CPPFLAGS = $(AM_CPPFLAGS) $(DYNAMIC_INCLUDES)
 dynamic_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 dynamic_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)

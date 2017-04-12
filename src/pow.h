@@ -15,10 +15,14 @@
 #include <util.h>
 #include <stdint.h>
 
+#include "dynamicparams.h"
+
 class arith_uint256;
 class CBlockHeader;
 class CBlockIndex;
 class uint256;
+
+// Additonal Macros for PoW Diff Algo
 
 #define PERCENT_FACTOR 100
 
@@ -39,8 +43,7 @@ class uint256;
 
 const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex);
 
-unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params&);                      
-unsigned int DeriveNextWorkRequired(const INDEX_TYPE pindexLast, const BLOCK_TYPE block, unsigned int initalBlock, const Consensus::Params&);
+unsigned int GetNextWorkRequired(const INDEX_TYPE pindexLast, const BLOCK_TYPE block, const Consensus::Params&);
 
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&);
