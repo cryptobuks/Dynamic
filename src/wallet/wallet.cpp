@@ -830,14 +830,6 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         Lock();
         Unlock(strWalletPassphrase);
 
-        // if we are using HD, replace the HD master key (seed) with a new one
-        if (IsHDEnabled()) {
-            CKey key;
-            CPubKey masterPubKey = GenerateNewHDMasterKey();
-            if (!SetHDMasterKey(masterPubKey))
-                return false;
-        }
-
         // if we are not using HD, generate new keypool
         if(!IsHDEnabled())
             NewKeyPool();
@@ -4365,30 +4357,40 @@ bool CWallet::InitLoadWallet()
         walletInstance->SetMaxVersion(nMaxVersion);
     }
 
-    if (fFirstRun)
-    {
-        // Create new keyUser and set as default key
-        if (GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET) && !walletInstance->IsHDEnabled()) {
-            // generate a new master key
-            CPubKey masterPubKey = walletInstance->GenerateNewHDMasterKey();
-            if (!walletInstance->SetHDMasterKey(masterPubKey))
-                    return InitError(_("Storing master key failed"));
-        }
-        CPubKey newDefaultKey;
-        if (walletInstance->GetKeyFromPool(newDefaultKey)) {
-            walletInstance->SetDefaultKey(newDefaultKey);
-            if (!walletInstance->SetAddressBook(walletInstance->vchDefaultKey.GetID(), "", "receive"))
-                return InitError(_("Cannot write default address") += "\n");
-        }
+    if (fFirstRun) {
+            // Create new keyUser and set as default key
+            RandAddSeedPerfmon();
 
-        walletInstance->SetBestChain(chainActive.GetLocator());
-    }
-    else if (mapArgs.count("-usehd")) {
+            if (GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET) && !pwalletMain->IsHDEnabled()) {
+                // generate a new master key
+                pwalletMain->GenerateNewHDMasterKey();
+            }
+
+            CPubKey newDefaultKey;
+            if (pwalletMain->GetKeyFromPool(newDefaultKey)) {
+            pwalletMain->SetDefaultKey(newDefaultKey);
+                if (!pwalletMain->SetAddressBook(pwalletMain->vchDefaultKey.GetID(), "", "receive"))
+                    return InitError(_("Cannot write default address"));
+            }
+
+            pwalletMain->SetBestChain(chainActive.GetLocator());
+
+            // Try to create wallet backup right after new wallet was created
+            std::string strBackupWarning;
+            std::string strBackupError;
+            if(!AutoBackupWallet(pwalletMain, "", strBackupWarning, strBackupError)) {
+            if (!strBackupWarning.empty())
+                InitWarning(strBackupWarning);
+            if (!strBackupError.empty())
+                return InitError(strBackupError);
+        }
+    } else if (mapArgs.count("-usehd")) {        
         bool useHD = GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET);
-        if (walletInstance->IsHDEnabled() && !useHD)
-            return InitError(strprintf(_("Error loading %s: You can't disable HD on a already existing HD wallet"), walletFile));
-        if (!walletInstance->IsHDEnabled() && useHD)
-            return InitError(strprintf(_("Error loading %s: You can't enable HD on a already existing non-HD wallet"), walletFile));
+        if (pwalletMain->IsHDEnabled() && !useHD)
+            return InitError(strprintf("Error loading %s: You can't disable HD on a already existing HD wallet", walletFile));
+
+        if (!pwalletMain->IsHDEnabled() && useHD)
+            return InitError(strprintf("Error loading %s: You can't enable HD on a already existing non-HD wallet", walletFile));
     }
 
     LogPrintf(" wallet      %15dms\n", GetTimeMillis() - nStart);

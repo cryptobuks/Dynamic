@@ -1827,19 +1827,6 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     RandAddSeedPerfmon();
 
-     if (GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET) && !pwalletMain->IsHDEnabled()) {
-        // generate a new master key
-        pwalletMain->GenerateNewHDMasterKey();
-    }
-
-    if (mapArgs.count("-usehd")) {
-        bool useHD = GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET);
-        if (pwalletMain->IsHDEnabled() && !useHD)
-            return InitError(strprintf(_("Error loading %s: You can't disable HD on a already existing HD wallet"), strWalletFile));
-        if (!pwalletMain->IsHDEnabled() && useHD)
-            return InitError(strprintf(_("Error loading %s: You can't enable HD on a already existing non-HD wallet"), strWalletFile));
-    }
- 
     // Warn user every time he starts non-encrypted HD wallet
     if (GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET) && !pwalletMain->IsLocked()) {
         InitWarning(_("Make sure to encrypt your wallet and delete all non-encrypted backups after you verified that wallet works!"));
