@@ -1,10 +1,22 @@
 // Copyright (c) 2009-2017 Satoshi Nakamoto
 // Copyright (c) 2009-2017 The Bitcoin Developers
 // Copyright (c) 2014-2017 The Dash Core Developers
+// Copyright (c) 2015-2016 The Gulden developers
 // Copyright (c) 2016-2017 Duality Blockchain Solutions Developers
-// Copyright (c) 2016-2017 The ZCash Developers
+//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+//
+// This file contains Delta, the Gulden Difficulty Re-adjustment algorithm developed by 
+// Frank (dt_cdog@yahoo.com) with various enhancements by Malcolm MacLeod (mmacleod@webmail.co.za)
+//
+// The core algorithm works by taking time measurements of four periods 
+// (last block; short window; medium window; long window) and then apply a weighting to them.
+// This allows the algorithm to react to short term fluctuations while still taking long term block 
+// targets into account, which helps prevent it from overreacting.
+//
+// In addition to the core algorithm several extra rules are then applied in certain situations 
+// (e.g. multiple quick blocks) to enhance the behaviour.
 
 #include "pow.h"
 
