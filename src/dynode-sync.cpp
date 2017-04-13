@@ -76,7 +76,7 @@ bool CDynodeSync::IsBlockchainSynced(bool fBlockAccepted)
             }
         } else {
             // skip if we already checked less than 1 tick ago
-            if(GetTime() - nTimeLastProcess < DYNODE_SYNC_TICK_SECONDS - DYNODE_SYNC_TICK_SECONDS_INITIAL) {
+            if(GetTime() - nTimeLastProcess < DYNODE_SYNC_TICK_SECONDS_INITIAL) {
                 nSkipped++;
                 return fBlockchainSynced;
            }
@@ -275,7 +275,7 @@ void CDynodeSync::ProcessTick()
     static int nTick = 0;
 
     if (IsInitialBlockDownload()) {
-        if(nTick++ % (DYNODE_SYNC_TICK_SECONDS - DYNODE_SYNC_TICK_SECONDS_INITIAL) != 0) return;
+        if(nTick++ % (DYNODE_SYNC_TICK_SECONDS_INITIAL) != 0) return;
     }
     else
     if (!IsInitialBlockDownload()) {
@@ -391,7 +391,7 @@ void CDynodeSync::ProcessTick()
                 LogPrint("Dynode", "CDynodeSync::ProcessTick -- nTick %d nRequestedDynodeAssets %d nTimeLastDynodeList %lld GetTime() %lld diff %lld\n", nTick, nRequestedDynodeAssets, nTimeLastDynodeList, GetTime(), GetTime() - nTimeLastDynodeList);
                 if (IsInitialBlockDownload()) {
                     // check for timeout first
-                    if(nTimeLastDynodeList < GetTime() - (DYNODE_SYNC_TIMEOUT_SECONDS - DYNODE_SYNC_TIMEOUT_SECONDS_INITIAL)) {
+                    if(nTimeLastDynodeList < GetTime() - (DYNODE_SYNC_TIMEOUT_SECONDS_INITIAL)) {
                         LogPrintf("CDynodeSync::ProcessTick -- nTick %d nRequestedDynodeAssets %d -- timeout\n", nTick, nRequestedDynodeAssets);
                         if (nRequestedDynodeAttempt == 0) {
                             LogPrintf("CDynodeSync::ProcessTick -- ERROR: failed to sync %s\n", GetAssetName());
@@ -444,7 +444,7 @@ void CDynodeSync::ProcessTick()
                 // This might take a lot longer than DYNODE_SYNC_TIMEOUT_SECONDS minutes due to new blocks,
                 // but that should be OK and it should timeout eventually.
                 if (IsInitialBlockDownload()) {
-                    if(nTimeLastPaymentVote < GetTime() - (DYNODE_SYNC_TIMEOUT_SECONDS - DYNODE_SYNC_TIMEOUT_SECONDS_INITIAL)) {
+                    if(nTimeLastPaymentVote < GetTime() - (DYNODE_SYNC_TIMEOUT_SECONDS_INITIAL)) {
                         LogPrintf("CDynodeSync::ProcessTick -- nTick %d nRequestedDynodeAssets %d -- timeout\n", nTick, nRequestedDynodeAssets);
                         if (nRequestedDynodeAttempt == 0) {
                             LogPrintf("CDynodeSync::ProcessTick -- ERROR: failed to sync %s\n", GetAssetName());
@@ -507,7 +507,7 @@ void CDynodeSync::ProcessTick()
 
                 // check for timeout first
                 if (IsInitialBlockDownload()) {
-                    if(GetTime() - nTimeLastGovernanceItem > (DYNODE_SYNC_TIMEOUT_SECONDS - DYNODE_SYNC_TIMEOUT_SECONDS_INITIAL)) {
+                    if(GetTime() - nTimeLastGovernanceItem > (DYNODE_SYNC_TIMEOUT_SECONDS_INITIAL)) {
                         LogPrintf("CDynodeSync::ProcessTick -- nTick %d nRequestedDynodeAssets %d -- timeout\n", nTick, nRequestedDynodeAssets);
                         if(nRequestedDynodeAttempt == 0) {
                             LogPrintf("CDynodeSync::ProcessTick -- WARNING: failed to sync %s\n", GetAssetName());
@@ -549,7 +549,7 @@ void CDynodeSync::ProcessTick()
 
                         if (IsInitialBlockDownload()) {
                             if(GetTime() - nTimeNoObjectsLeft > DYNODE_SYNC_TIMEOUT_SECONDS &&
-                                governance.GetVoteCount() - nLastVotes < std::max(int(0.0001 * nLastVotes), (DYNODE_SYNC_TICK_SECONDS - DYNODE_SYNC_TICK_SECONDS_INITIAL))
+                                governance.GetVoteCount() - nLastVotes < std::max(int(0.0001 * nLastVotes), (DYNODE_SYNC_TICK_SECONDS_INITIAL))
                             ) {
                                 // We already asked for all objects, waited for DYNODE_SYNC_TIMEOUT_SECONDS
                                 // after that and less then 0.01% or DYNODE_SYNC_TICK_SECONDS
