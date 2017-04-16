@@ -73,8 +73,6 @@ DYNAMIC_CORE_H = \
   amount.h \
   arith_uint256.h \
   base58.h \
-  bip39.h \
-  bip39_english.h \
   bloom.h \
   cachemap.h \
   cachemultimap.h \
@@ -267,7 +265,6 @@ libdynamic_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(DYNAMIC_INCLUDES)
 libdynamic_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libdynamic_wallet_a_SOURCES = \
   activedynode.cpp \
-  bip39.cpp \
   privatesend.cpp \
   psnotificationinterface.cpp \
   privatesend-relay.cpp \

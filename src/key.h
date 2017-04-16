@@ -168,7 +168,6 @@ struct CExtKey {
     bool Derive(CExtKey& out, unsigned int nChild) const;
     CExtPubKey Neuter() const;
     void SetMaster(const unsigned char* seed, unsigned int nSeedLen);
-    
     template <typename Stream>
     void Serialize(Stream& s, int nType, int nVersion) const
     {
