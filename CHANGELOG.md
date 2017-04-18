@@ -1,5 +1,6 @@
 **Dynamic v1.4.0.0**
 
+* Remove unused local variable shadowing upper local in sighash_tests.cpp
 * UpdateTip: log only one line at most per block
 * Qt: Sort transactions by date
 * VerifyDB: don't check blocks that have been pruned
