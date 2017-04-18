@@ -1,5 +1,24 @@
 **Dynamic v1.4.0.0**
-
+* Qt: Sort transactions by date
+* VerifyDB: don't check blocks that have been pruned
+* Disable the mempool P2P command when bloom filters disabled
+* Consensus: Decouple from chainparams.o and timedata.o
+* qt: askpassphrasedialog: Clear pass fields on accept
+* Repair rpcconsole.cpp signal slot
+* CAddrman::Deserialize handle corrupt serializations better
+* net: Avoid duplicate getheaders requests
+* Move GetAccountBalance from rpcwallet.cpp to CWallet::GetAccountBalance
+* Optimise reindex
+* Removal of unused function in random.cpp
+* Bug fixes and improvements to traffic graph widget
+* Increase nDefaultDbCache from 300MiB to 512MiB
+* Shift fork logic to its own file
+* Fix issue with headers first sync
+* Update RPC error type in dnsync
+* Ensure Sporks are synced before allowing mining with GBT
+* Threads increased to 4 in hash.h for Argon2d
+* Protocol Bumped to 70400
+* Min Proto Bump for PrivateSend and Dynode POSE_BAN to 70300
 * Inline crypter.cpp with Bitcoin 0.13
 * Reject payment vote if Dynode rank cannot be calculated
 * Fix ProcessVerifyBroadcast
@@ -17,6 +36,7 @@
 * Modify DynodeRateCheck to support updating buffers only on failure
 * Update rate check buffer only when fAddToSeen is true
 * Amend Venerability with 'dnsync next'
+
 
 **Dynamic v1.3.0.2**
 * [Sync] Fix issue with headers first sync
