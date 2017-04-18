@@ -13,7 +13,6 @@
 * Optimise reindex
 * Removal of unused function in random.cpp
 * Bug fixes and improvements to traffic graph widget
-* Increase nDefaultDbCache from 300MiB to 512MiB
 * Shift fork logic to its own file
 * Fix issue with headers first sync
 * Update RPC error type in dnsync
@@ -47,7 +46,7 @@
 * [Qt] Add CheckForks in the Qt Project File
 * [Fork] Silence usage of pindex compeletely
 * [Sync]Timeouts/DB/Headers/Limits
-* Reduce nDefaultDbCache to 512MiB
+* Increase nDefaultDbCache from 300MiB to 512MiB
 * Bump Proto and ONLY connect to 1.3.0.1 (Proto 70200)
 * Bump Governance/Core Proto/Versions
 
