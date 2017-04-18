@@ -955,8 +955,7 @@ void RPCConsole::disconnectSelectedNode()
     // Get currently selected peer address
     QString strNode = GUIUtil::getEntryData(ui->peerWidget, 0, PeerTableModel::Address);
     // Find the node, disconnect it and clear the selected node
-    if (CNode *bannedNode = FindNode(strNode.toStdString())) {
-        bannedNode->fDisconnect = true;
+    if (FindNode(strNode.toStdString())) {
         clearSelectedNode();
     }
 }
@@ -976,8 +975,6 @@ void RPCConsole::banSelectedNode(int bantime)
         SplitHostPort(nStr, port, addr);
 
         CNode::Ban(CNetAddr(addr), BanReasonManuallyAdded, bantime);
-        bannedNode->fDisconnect = true;
-        DumpBanlist();
 
         clearSelectedNode();
         clientModel->getBanTableModel()->refresh();
@@ -996,7 +993,6 @@ void RPCConsole::unbanSelectedNode()
     if (possibleSubnet.IsValid())
     {
         CNode::Unban(possibleSubnet);
-        DumpBanlist();
         clientModel->getBanTableModel()->refresh();
     }
 }
