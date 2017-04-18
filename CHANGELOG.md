@@ -1,4 +1,6 @@
 **Dynamic v1.4.0.0**
+
+* UpdateTip: log only one line at most per block
 * Qt: Sort transactions by date
 * VerifyDB: don't check blocks that have been pruned
 * Disable the mempool P2P command when bloom filters disabled
@@ -39,6 +41,7 @@
 
 
 **Dynamic v1.3.0.2**
+
 * [Sync] Fix issue with headers first sync
 * [Sync] [Consensus] Shift Fork Logic to its own file
 * [Qt] Add CheckForks in the Qt Project File
@@ -50,16 +53,19 @@
 
 
 **Dynamic v1.3.0.1**
+
 * Bump Protocols to lock out nodes at or below v1.2 to prevent any forks
 
 
-**Dynamic v1.3.0.0**	
+**Dynamic v1.3.0.0**
+
 * c++11:Backport from bitcoin-core: don't throw from the reverselock destructor
 * InitError instead of throw on failure
 * Hard Fork at block 300,000 for Delta difficulty retarget algorithm
 
 
-**Dynamic v1.2.0.0**	
+**Dynamic v1.2.0.0**
+
 * Make RelayWalletTransaction attempt to AcceptToMemoryPool
 * Update tests for Byteswap
 * Ensure is in valid range
@@ -102,7 +108,8 @@
 * Added IPv4 seed nodes to chainparamsseeds.h
 
 
-**Dynamic v1.1.0.0**			
+**Dynamic v1.1.0.0**
+
 * Inline with BTC 0.12		
 * HD Wallet Code Improvements		
 * Remove/Replace Boost usage for c++11		
