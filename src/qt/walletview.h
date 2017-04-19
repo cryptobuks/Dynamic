@@ -135,6 +135,9 @@ public Q_SLOTS:
     /** User has requested more information about the out of sync state */
     void requestedSyncWarningInfo();
 
+    /** Unlock|Lock wallet when clicking on icon */
+    void on_labelWalletEncryptionIcon_clicked(bool fForMixingOnly);
+
 Q_SIGNALS:
     /** Signal that we want to show the main window */
     void showNormalIfMinimized();
