@@ -29,6 +29,7 @@ QT_FORMS_UI = \
   qt/forms/editaddressdialog.ui \
   qt/forms/helpmessagedialog.ui \
   qt/forms/intro.ui \
+  qt/forms/modaloverlay.ui \
   qt/forms/dynodelist.ui \
   qt/forms/openuridialog.ui \
   qt/forms/optionsdialog.ui \
@@ -50,12 +51,13 @@ QT_MOC_CPP = \
   qt/moc_addresstablemodel.cpp \
   qt/moc_askpassphrasedialog.cpp \
   qt/moc_bantablemodel.cpp \
+  qt/moc_dnspage.cpp \
+  qt/moc_dnstablemodel.cpp \
   qt/moc_dynamicaddressvalidator.cpp \
   qt/moc_dynamicamountfield.cpp \
   qt/moc_dynamicgui.cpp \
   qt/moc_dynamicunits.cpp \
-  qt/moc_dnspage.cpp \
-  qt/moc_dnstablemodel.cpp \
+  qt/moc_dynodelist.cpp \
   qt/moc_clientmodel.cpp \
   qt/moc_coincontroldialog.cpp \
   qt/moc_coincontroltreewidget.cpp \
@@ -66,7 +68,7 @@ QT_MOC_CPP = \
   qt/moc_intro.cpp \
   qt/moc_macdockiconhandler.cpp \
   qt/moc_macnotificationhandler.cpp \
-  qt/moc_dynodelist.cpp \
+  qt/moc_modaloverlay.cpp \
   qt/moc_notificator.cpp \
   qt/moc_openuridialog.cpp \
   qt/moc_optionsdialog.cpp \
@@ -124,12 +126,13 @@ DYNAMIC_QT_H = \
   qt/addresstablemodel.h \
   qt/askpassphrasedialog.h \
   qt/bantablemodel.h \
+  qt/dnspage.h \
+  qt/dnstablemodel.h \
   qt/dynamicaddressvalidator.h \
   qt/dynamicamountfield.h \
   qt/dynamicgui.h \
   qt/dynamicunits.h \
-  qt/dnspage.h \
-  qt/dnstablemodel.h \
+  qt/dynodelist.h \
   qt/clientmodel.h \
   qt/coincontroldialog.h \
   qt/coincontroltreewidget.h \
@@ -141,7 +144,10 @@ DYNAMIC_QT_H = \
   qt/intro.h \
   qt/macdockiconhandler.h \
   qt/macnotificationhandler.h \
-  qt/dynodelist.h \
+  qt/modaloverlay.h \
+  qt/multisigaddressentry.h \
+  qt/multisigdialog.h \
+  qt/multisiginputentry.h \
   qt/networkstyle.h \
   qt/notificator.h \
   qt/openuridialog.h \
@@ -175,11 +181,9 @@ DYNAMIC_QT_H = \
   qt/walletmodel.h \
   qt/walletmodeltransaction.h \
   qt/walletview.h \
-  qt/winshutdownmonitor.h \
-  qt/multisigaddressentry.h \
-  qt/multisigdialog.h \
-  qt/multisiginputentry.h
-  
+  qt/winshutdownmonitor.h
+
+
 RES_ICONS = \
   qt/res/icons/dynamic.ico \
   qt/res/icons/dynamic.png \
@@ -242,16 +246,17 @@ RES_ICONS = \
 
 DYNAMIC_QT_CPP = \
   qt/bantablemodel.cpp \
-  qt/dynamicaddressvalidator.cpp \
-  qt/dynamicamountfield.cpp \
-  qt/dynamicgui.cpp \
-  qt/dynamicunits.cpp \
   qt/clientmodel.cpp \
   qt/csvmodelwriter.cpp \
   qt/dnspage.cpp \
   qt/dnstablemodel.cpp \
+  qt/dynamicaddressvalidator.cpp \
+  qt/dynamicamountfield.cpp \
+  qt/dynamicgui.cpp \
+  qt/dynamicunits.cpp \
   qt/guiutil.cpp \
   qt/intro.cpp \
+  qt/modaloverlay.cpp \
   qt/networkstyle.cpp \
   qt/notificator.cpp \
   qt/optionsdialog.cpp \

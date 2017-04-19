@@ -132,6 +132,9 @@ public Q_SLOTS:
     /** Update selected DYN amount from transactionview */
     void trxAmount(QString amount);
 
+    /** User has requested more information about the out of sync state */
+    void requestedSyncWarningInfo();
+
 Q_SIGNALS:
     /** Signal that we want to show the main window */
     void showNormalIfMinimized();
@@ -143,6 +146,8 @@ Q_SIGNALS:
     void hdEnabledStatusChanged(int hdEnabled);
     /** Notify that a new transaction appeared */
     void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label);
+    /** Notify that the out of sync warning icon has been pressed */
+    void outOfSyncWarningClicked();
 };
 
 #endif // DYNAMIC_QT_WALLETVIEW_H

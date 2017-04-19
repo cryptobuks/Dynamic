@@ -1,5 +1,15 @@
 **Dynamic v1.4.0.0**
 
+* [Qt] Use nPowTargetSpacing constant
+* [Qt] Show ModalOverlay by pressing the progress bar, disabled show() in sync mode
+* 	
+[Qt] use NotifyHeaderTip's height and date for the progress update
+* [Qt] sync-overlay: Don't show progress twice
+* [Qt] sync-overlay: Don't show estimated number of headers left
+* [Qt] sync-overlay: Don't block during reindex
+* [Qt] modalinfolayer: removed unused comments, renamed signal, code style overhaul
+* [Qt] only update "amount of blocks left" when the header chain is in-sync
+* [Qt] add out-of-sync modal info layer
 * Remove namespace std; usages from entire codebase
 * Remove unused local variable shadowing upper local in sighash_tests.cpp
 * UpdateTip: log only one line at most per block
