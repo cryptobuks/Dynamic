@@ -44,6 +44,7 @@
 #include <QDateTime>
 #include <QDesktopWidget>
 #include <QDragEnterEvent>
+#include <QIcon>
 #include <QListWidget>
 #include <QMenuBar>
 #include <QMessageBox>
@@ -80,9 +81,9 @@ const QString DynamicGUI::DEFAULT_WALLET = "~Default";
 
 DynamicGUI::DynamicGUI(const PlatformStyle *_platformStyle, const NetworkStyle *networkStyle, QWidget *parent) :
     QMainWindow(parent),
+    labelWalletEncryptionIcon(0),
     clientModel(0),
     walletFrame(0),
-    labelWalletEncryptionIcon(0),
     unitDisplayControl(0),
     labelWalletHDStatusIcon(0),
     labelConnectionsIcon(0),
@@ -215,7 +216,7 @@ DynamicGUI::DynamicGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
     labelConnectionsIcon->setStyleSheet(".QPushButton { background-color: rgba(255, 255, 255, 0);}");
     labelConnectionsIcon->setMaximumSize(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE);
     // Jump to peers tab by clicking on connections icon
-    connect(labelConnectionsIcon, SIGNAL(clicked()), this, SLOT(showPeers()));
+    connect(labelConnectionsIcon, SIGNAL(clicked(QPoint)), this, SLOT(showPeers()));
 
     labelBlocksIcon = new QLabel();
     if(enableWallet)
