@@ -147,7 +147,7 @@ void WalletView::setDynamicGUI(DynamicGUI *gui)
         connect(this, SIGNAL(hdEnabledStatusChanged(int)), gui, SLOT(setHDStatus(int)));
 
         // Dynamic:
-        connect(gui->labelWalletEncryptionIcon, SIGNAL(clicked()), this, SLOT(on_labelWalletEncryptionIcon_clicked(bool)));
+        connect(gui->labelWalletEncryptionIcon, SIGNAL(clicked(QPoint)), this, SLOT(on_labelWalletEncryptionIcon_clicked(bool)));
     }
 }
 
