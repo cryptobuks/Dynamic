@@ -242,7 +242,8 @@ RES_ICONS = \
   qt/res/icons/drk/unit_dyn.png \
   qt/res/icons/drk/unit_mdyn.png \
   qt/res/icons/drk/unit_udyn.png \
-  qt/res/icons/drk/unit_satoshis.png
+  qt/res/icons/drk/unit_satoshis.png \
+  qt/res/icons/drk/warning.png
 
 DYNAMIC_QT_CPP = \
   qt/bantablemodel.cpp \
