@@ -2,8 +2,7 @@
 
 * [Qt] Use nPowTargetSpacing constant
 * [Qt] Show ModalOverlay by pressing the progress bar, disabled show() in sync mode
-* 	
-[Qt] use NotifyHeaderTip's height and date for the progress update
+* [Qt] use NotifyHeaderTip's height and date for the progress update
 * [Qt] sync-overlay: Don't show progress twice
 * [Qt] sync-overlay: Don't show estimated number of headers left
 * [Qt] sync-overlay: Don't block during reindex
