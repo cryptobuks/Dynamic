@@ -1,5 +1,6 @@
 **Dynamic v1.4.0.0**
 
+* Remove namespace std; usages from entire codebase
 * Remove unused local variable shadowing upper local in sighash_tests.cpp
 * UpdateTip: log only one line at most per block
 * Qt: Sort transactions by date
