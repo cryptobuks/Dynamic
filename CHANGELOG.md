@@ -1,5 +1,7 @@
 **Dynamic v1.4.0.0**
 
+* Fix Segfault/Init Load Issue
+* Implement Full HD Wallet Functionality
 * [QT] Fix issue with enableWallet
 * [QT] Fix several signal/slot issues
 * [Qt] Use nPowTargetSpacing constant
