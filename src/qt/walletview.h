@@ -136,7 +136,7 @@ public Q_SLOTS:
     void requestedSyncWarningInfo();
 
     /** Unlock|Lock wallet when clicking on icon */
-    void on_labelWalletEncryptionIcon_clicked(bool fForMixingOnly);
+    void on_labelWalletEncryptionIcon_clicked(bool fForMixingOnly = false);
 
 Q_SIGNALS:
     /** Signal that we want to show the main window */

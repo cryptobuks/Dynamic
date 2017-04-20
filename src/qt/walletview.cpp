@@ -147,7 +147,7 @@ void WalletView::setDynamicGUI(DynamicGUI *gui)
         connect(this, SIGNAL(hdEnabledStatusChanged(int)), gui, SLOT(setHDStatus(int)));
 
         // Dynamic:
-        connect(gui->labelWalletEncryptionIcon, SIGNAL(clicked(QPoint)), this, SLOT(on_labelWalletEncryptionIcon_clicked(bool)));
+        connect(gui->labelWalletEncryptionIcon, SIGNAL(clicked()), this, SLOT(on_labelWalletEncryptionIcon_clicked()));
     }
 }
 
@@ -417,13 +417,16 @@ void WalletView::requestedSyncWarningInfo()
     Q_EMIT outOfSyncWarningClicked();
 }
 
+
 void WalletView::on_labelWalletEncryptionIcon_clicked(bool fForMixingOnly)
 {
     if(!walletModel)
         return;
-
-    if (walletModel->getEncryptionStatus() == WalletModel::Locked || walletModel->getEncryptionStatus() == WalletModel::UnlockedForMixingOnly)
-    {
+    
+    if (walletModel->getEncryptionStatus() == WalletModel::Unlocked) {
+        walletModel->setWalletLocked(true);
+    }
+    else {
         AskPassphraseDialog dlg(fForMixingOnly ? AskPassphraseDialog::UnlockMixing : AskPassphraseDialog::Unlock, this);
         dlg.setModel(walletModel);
         dlg.exec();
