@@ -1,5 +1,6 @@
 **Dynamic v1.4.0.0**
 
+* Lock Icon can now be clicked to unlock wallet
 * Fix Segfault/Init Load Issue
 * Implement Full HD Wallet Functionality
 * [QT] Fix issue with enableWallet
