@@ -167,7 +167,7 @@ public:
     CDynamicExtKeyBase() {}
 };
 
-typedef CDynamicExtKeyBase<CExtKey, BIP32_EXTKEY_SIZE, CChainParams::EXT_SECRET_KEY> CDynamicExtKey;
-typedef CDynamicExtKeyBase<CExtPubKey, BIP32_EXTKEY_SIZE, CChainParams::EXT_PUBLIC_KEY> CDynamicExtPubKey;
+typedef CDynamicExtKeyBase<CExtKey, 74, CChainParams::EXT_SECRET_KEY> CDynamicExtKey;
+typedef CDynamicExtKeyBase<CExtPubKey, 74, CChainParams::EXT_PUBLIC_KEY> CDynamicExtPubKey;
 
 #endif // DYNAMIC_BASE58_H
