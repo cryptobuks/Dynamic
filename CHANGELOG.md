@@ -1,5 +1,7 @@
 **Dynamic v1.4.0.0**
 
+* [QT] Fix issue with enableWallet
+* [QT] Fix several signal/slot issues
 * [Qt] Use nPowTargetSpacing constant
 * [Qt] Show ModalOverlay by pressing the progress bar, disabled show() in sync mode
 * [Qt] use NotifyHeaderTip's height and date for the progress update
