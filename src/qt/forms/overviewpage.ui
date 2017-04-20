@@ -66,6 +66,9 @@
             </item>
             <item>
              <widget class="QLabel" name="labelWalletStatus">
+              <property name="cursor">
+               <cursorShape>WhatsThisCursor</cursorShape>
+              </property>
               <property name="toolTip">
                <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Dynamic network after a connection is established, but this process has not completed yet.</string>
               </property>
@@ -693,6 +696,9 @@ border-style:solid;</string>
             </item>
             <item>
              <widget class="QLabel" name="labelTransactionsStatus">
+              <property name="cursor">
+               <cursorShape>WhatsThisCursor</cursorShape>
+              </property>
               <property name="toolTip">
                <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Dynamic network after a connection is established, but this process has not completed yet.</string>
               </property>
@@ -703,7 +709,7 @@ border-style:solid;</string>
                <string notr="true">(out of sync)</string>
               </property>
               <property name="alignment">
-               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
               </property>
              </widget>
             </item>
