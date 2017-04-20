@@ -73,6 +73,8 @@ DYNAMIC_CORE_H = \
   amount.h \
   arith_uint256.h \
   base58.h \
+  bip39.h \
+  bip39_english.h \
   bloom.h \
   cachemap.h \
   cachemultimap.h \
@@ -97,17 +99,20 @@ DYNAMIC_CORE_H = \
   consensus/validation.h \
   core_io.h \
   core_memusage.h \
-  privatesend.h \
-  psnotificationinterface.h \
-  privatesend-relay.h \
+  dynode.h \
+  dynode-payments.h \
+  dynode-sync.h \
+  dynodeman.h \
+  dynodeconfig.h \
+  flat-database.h \
   governance.h \
   governance-classes.h \
   governance-exceptions.h \
   governance-object.h \
   governance-vote.h \
   governance-votedb.h \
-  flat-database.h \
   hash.h \
+  hdchain.h \
   httprpc.h \
   httpserver.h \
   init.h \
@@ -118,11 +123,6 @@ DYNAMIC_CORE_H = \
   dbwrapper.h \
   limitedmap.h \
   main.h \
-  dynode.h \
-  dynode-payments.h \
-  dynode-sync.h \
-  dynodeman.h \
-  dynodeconfig.h \
   memusage.h \
   merkleblock.h \
   messagesigner.h \
@@ -138,6 +138,9 @@ DYNAMIC_CORE_H = \
   prevector.h \
   primitives/block.h \
   primitives/transaction.h \
+  privatesend.h \
+  psnotificationinterface.h \
+  privatesend-relay.h \
   protocol.h \
   pubkey.h \
   random.h \
@@ -265,9 +268,7 @@ libdynamic_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(DYNAMIC_INCLUDES)
 libdynamic_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libdynamic_wallet_a_SOURCES = \
   activedynode.cpp \
-  privatesend.cpp \
-  psnotificationinterface.cpp \
-  privatesend-relay.cpp \
+  bip39.cpp \
   instantsend.cpp \
   dynode.cpp \
   dynode-payments.cpp \
@@ -275,6 +276,9 @@ libdynamic_wallet_a_SOURCES = \
   dynodeconfig.cpp \
   dynodeman.cpp \
   keepass.cpp \
+  privatesend.cpp \
+  psnotificationinterface.cpp \
+  privatesend-relay.cpp \
   wallet/crypter.cpp \
   wallet/db.cpp \
   wallet/rpcdump.cpp \
@@ -333,6 +337,7 @@ libdynamic_common_a_SOURCES = \
   core_read.cpp \
   core_write.cpp \
   hash.cpp \
+  hdchain.cpp \
   key.cpp \
   keystore.cpp \
   netbase.cpp \
