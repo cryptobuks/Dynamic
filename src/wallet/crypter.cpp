@@ -276,9 +276,25 @@ bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn, bool fForMixin
             LogPrintf("The wallet is probably corrupted: Some keys decrypt but not all.\n");
             assert(false);
         }
-        if (keyFail || !keyPass)
+        if (keyFail || (!keyPass && cryptedHDChain.IsNull()))
             return false;
         vMasterKey = vMasterKeyIn;
+
+        if(!cryptedHDChain.IsNull()) {
+            bool chainPass = false;
+            // try to decrypt seed and make sure it matches
+            std::vector<unsigned char> vchSeed;
+            if (DecryptHDChainSeed(vchSeed)) {
+                CHDChain hdChainTmp;
+                hdChainTmp.SetSeed(vchSeed, false);
+                // make sure seed matches this chain
+                chainPass = cryptedHDChain.id == hdChainTmp.GetSeedHash();
+            }
+            if (!chainPass) {
+                vMasterKey.clear();
+                return false;
+            }
+        }
         fDecryptionThoroughlyChecked = true;
     }
     fOnlyMixingAllowed = fForMixingOnly;
@@ -379,4 +395,90 @@ bool CCryptoKeyStore::EncryptKeys(CKeyingMaterial& vMasterKeyIn)
         mapKeys.clear();
     }
     return true;
+}
+
+bool CCryptoKeyStore::EncryptHDChainSeed(CKeyingMaterial& vMasterKeyIn)
+{
+    // should call EncryptKeys first
+    if (!IsCrypted())
+        return false;
+
+    if (!cryptedHDChain.IsNull())
+        return true;
+
+    std::vector<unsigned char> vchCryptedSeed;
+
+    const std::vector<unsigned char> vchSeed = hdChain.GetSeed();
+
+    uint8_t secret[vchSeed.size()];
+    memcpy(&secret[0], (unsigned char*)&(vchSeed.begin())[0], vchSeed.size());
+    CKeyingMaterial vchSecret(secret, secret + vchSeed.size());
+
+    // make sure seed matches this chain
+    if (hdChain.id != hdChain.GetSeedHash())
+        return false;
+
+    if (!EncryptSecret(vMasterKeyIn, vchSecret, hdChain.id, vchCryptedSeed))
+        return false;
+
+    cryptedHDChain = hdChain;
+    if (!cryptedHDChain.SetSeed(vchCryptedSeed, false))
+        return false;
+
+    if (!hdChain.SetNull())
+        return false;
+
+    return true;
+}
+
+bool CCryptoKeyStore::DecryptHDChainSeed(std::vector<unsigned char>& vchSeedRet) const
+{
+    if (!IsCrypted())
+        return true;
+
+    if (cryptedHDChain.IsNull())
+        return false;
+
+    CKeyingMaterial vchSecret;
+    std::vector<unsigned char> vchCryptedSecret = cryptedHDChain.GetSeed();
+
+    if(!DecryptSecret(vMasterKey, vchCryptedSecret, cryptedHDChain.id, vchSecret))
+        return false;
+
+    uint8_t seed[vchSecret.size()];
+    memcpy(&seed[0], (unsigned char*)&(vchSecret.begin())[0], vchSecret.size());
+    std::vector<unsigned char> vchSeed(seed, seed + vchSecret.size());
+
+    vchSeedRet = vchSeed;
+
+    return true;
+}
+
+bool CCryptoKeyStore::SetHDChain(const CHDChain& chain)
+{
+    if (IsCrypted())
+        return false;
+
+    hdChain = chain;
+    return true;
+}
+
+bool CCryptoKeyStore::SetCryptedHDChain(const CHDChain& chain)
+{
+    if (!SetCrypted())
+        return false;
+
+    cryptedHDChain = chain;
+    return true;
+}
+
+bool CCryptoKeyStore::GetHDChain(CHDChain& hdChainRet) const
+{
+    if(IsCrypted()) {
+        hdChainRet = cryptedHDChain;
+        return !cryptedHDChain.IsNull();
+    }
+
+    hdChainRet = hdChain;
+    return !hdChain.IsNull();
 }

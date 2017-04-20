@@ -761,3 +761,8 @@ NameTableModel *WalletModel::getNameTableModel()
 {
     return nameTableModel;
 }
+
+bool WalletModel::hdEnabled() const
+{
+    return wallet->IsHDEnabled();
+}

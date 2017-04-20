@@ -17,7 +17,7 @@ class KeyPoolTest(DynamicTestFramework):
         addr_before_encrypting = nodes[0].getnewaddress()
         addr_before_encrypting_data = nodes[0].validateaddress(addr_before_encrypting)
         wallet_info_old = nodes[0].getwalletinfo()
-        assert(addr_before_encrypting_data['hdmasterkeyid'] == wallet_info_old['hdmasterkeyid'])
+        assert(addr_before_encrypting_data['hdchainid'] == wallet_info_old['hdchainid'])
 
         # Encrypt wallet and wait to terminate
         nodes[0].encryptwallet('test')
@@ -28,14 +28,14 @@ class KeyPoolTest(DynamicTestFramework):
         addr = nodes[0].getnewaddress()
         addr_data = nodes[0].validateaddress(addr)
         wallet_info = nodes[0].getwalletinfo()
-        assert(addr_before_encrypting_data['hdmasterkeyid'] != wallet_info['hdmasterkeyid'])
-        assert(addr_data['hdmasterkeyid'] == wallet_info['hdmasterkeyid'])
+        assert(addr_before_encrypting_data['hdchainid'] == wallet_info['hdchainid'])
+        assert(addr_data['hdchainid'] == wallet_info['hdchainid'])
 
         try:
             addr = nodes[0].getnewaddress()
-            raise AssertionError('Keypool should be exhausted after one address')
         except JSONRPCException as e:
-            assert(e.error['code']==-12)
+            raise AssertionError('Keypool should not be exhausted after one address')
+            # assert(e.error['code']==-12)
 
         # put three new keys in the keypool
         nodes[0].walletpassphrase('test', 12000)
