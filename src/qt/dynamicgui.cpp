@@ -81,6 +81,7 @@ const QString DynamicGUI::DEFAULT_WALLET = "~Default";
 
 DynamicGUI::DynamicGUI(const PlatformStyle *_platformStyle, const NetworkStyle *networkStyle, QWidget *parent) :
     QMainWindow(parent),
+    enableWallet(false),
     labelWalletEncryptionIcon(0),
     clientModel(0),
     walletFrame(0),
@@ -264,10 +265,11 @@ DynamicGUI::DynamicGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
 
     modalOverlay = new ModalOverlay(this->centralWidget());
 #ifdef ENABLE_WALLET
-    if(enableWallet)
+    if(enableWallet) {
         connect(walletFrame, SIGNAL(requestedSyncWarningInfo()), this, SLOT(showModalOverlay()));
         connect(labelBlocksIcon, SIGNAL(clicked(QPoint)), this, SLOT(showModalOverlay()));
         connect(progressBar, SIGNAL(clicked(QPoint)), this, SLOT(showModalOverlay()));
+        }
 #endif
 }
 
