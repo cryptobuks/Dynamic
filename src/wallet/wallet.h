@@ -884,7 +884,7 @@ public:
     void Flush(bool shutdown=false);
 
     //! Verify the wallet database and perform salvage if required
-    static bool Verify();
+    static bool Verify(const std::string& walletFile, std::string& warningString, std::string& errorString);
     
     /** 
      * Address book entry changed.
@@ -915,9 +915,6 @@ public:
 
     /* Mark a transaction (and it in-wallet descendants) as abandoned so its inputs may be respent. */
     bool AbandonTransaction(const uint256& hashTx);
-
-    /* Initializes the wallet, returns a new CWallet instance or a null pointer in case of an error */
-    static bool InitLoadWallet();
 
     /**
      * HD Wallet Functions
