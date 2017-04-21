@@ -2664,4 +2664,3 @@ UniValue makekeypair(const UniValue& params, bool fHelp)
     result.push_back(Pair("PublicKey", HexStr(key.GetPubKey())));
     return result;
 }
-
