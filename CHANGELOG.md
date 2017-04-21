@@ -1,5 +1,6 @@
 **Dynamic v1.4.0.0**
 
+* scheduler: fix sub-second precision with boost < 1.50
 * build: fix dynamic-config.h regeneration after touching build files
 * [Qt] Fix for issues with startup and multiple monitors on Windows.
 * Update error message for old wallet version issues
