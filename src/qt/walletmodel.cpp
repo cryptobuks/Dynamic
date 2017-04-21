@@ -392,7 +392,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
             return TransactionCommitFailed;
 
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-        ssTx << *newTx->tx;
+        ssTx << *newTx;
         transaction_array.append(&(ssTx[0]), ssTx.size());
     }
 
