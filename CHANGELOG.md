@@ -1,5 +1,6 @@
 **Dynamic v1.4.0.0**
 
+* Qt/Intro: Various fixes
 * depends: fix zlib build on osx
 * Fix parameter naming inconsistencies
 * scheduler: fix sub-second precision with boost < 1.50
