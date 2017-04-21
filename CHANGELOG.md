@@ -1,5 +1,6 @@
 **Dynamic v1.4.0.0**
 
+* Fix calculation of number of bound sockets to use
 * Fix unlocked access to vNodes.size()
 * Fix missed change to WalletTx structure
 * Fix incorrect pstx usages
