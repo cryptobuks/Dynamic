@@ -1,5 +1,6 @@
 **Dynamic v1.4.0.0**
 
+* Fix race when accessing std::locale::classic()
 * Fix some benign races
 * [Qt] fix coincontrol sort issue
 * Fix calculation of number of bound sockets to use
