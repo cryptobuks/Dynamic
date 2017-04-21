@@ -1,5 +1,6 @@
 **Dynamic v1.4.0.0**
 
+* Fix missed change to WalletTx structure
 * Fix AddrMan locking
 * Qt/Intro: Various fixes
 * depends: fix zlib build on osx
