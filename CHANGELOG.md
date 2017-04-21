@@ -1,5 +1,6 @@
 **Dynamic v1.4.0.0**
 
+* [Qt] Fix for issues with startup and multiple monitors on Windows.
 * Update error message for old wallet version issues
 * Lock Icon can now be clicked to unlock wallet
 * Fix Segfault/Init Load Issue
