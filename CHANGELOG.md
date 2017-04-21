@@ -1,5 +1,6 @@
 **Dynamic v1.4.0.0**
 
+* build: fix dynamic-config.h regeneration after touching build files
 * [Qt] Fix for issues with startup and multiple monitors on Windows.
 * Update error message for old wallet version issues
 * Lock Icon can now be clicked to unlock wallet
@@ -36,7 +37,7 @@
 * Update RPC error type in dnsync
 * Ensure Sporks are synced before allowing mining with GBT
 * Threads increased to 4 in hash.h for Argon2d
-* Protocol Bumped to 70400
+* Protocol Bumped to 70400 to only connect to v1.3.0.2 nodes
 * Min Proto Bump for PrivateSend and Dynode POSE_BAN to 70300
 * Inline crypter.cpp with Bitcoin 0.13
 * Reject payment vote if Dynode rank cannot be calculated
@@ -112,7 +113,6 @@
 * Reduce default number of blocks to check at startup
 * Fix random segfault when closing Choose data directory dialog
 * Fix several node initialization issues
-* Add FEATURE_HD
 * Improve handling of unconnecting headers
 * Fix DoS vulnerability in mempool acceptance
 * Bump default db cache to 300MiB
