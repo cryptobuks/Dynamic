@@ -85,25 +85,40 @@ static void store_block(void *output, const block *src) {
     }
 }
 
-/***************Memory allocators*****************/
-int allocate_memory(block **memory, uint32_t m_cost) {
-    if (memory != NULL) {
-        size_t memory_size = sizeof(block) * m_cost;
-        if (m_cost != 0 &&
-            memory_size / m_cost !=
-                sizeof(block)) { /*1. Check for multiplication overflow*/
-            return ARGON2_MEMORY_ALLOCATION_ERROR;
-        }
-
-        *memory = (block *)malloc(memory_size); /*2. Try to allocate*/
-
-        if (!*memory) {
-            return ARGON2_MEMORY_ALLOCATION_ERROR;
-        }
-
-        return ARGON2_OK;
-    } else {
+int allocate_memory(const argon2_context *context, uint8_t **memory,
+                    size_t num, size_t size) {
+    size_t memory_size = num*size;
+    if (memory == NULL) {
         return ARGON2_MEMORY_ALLOCATION_ERROR;
+    }
+
+    /* 1. Check for multiplication overflow */
+    if (size != 0 && memory_size / size != num) {
+        return ARGON2_MEMORY_ALLOCATION_ERROR;
+    }
+
+    /* 2. Try to allocate with appropriate allocator */
+    if (context->allocate_cbk) {
+        (context->allocate_cbk)(memory, memory_size);
+    } else {
+        *memory = malloc(memory_size);
+    }
+
+    if (*memory == NULL) {
+        return ARGON2_MEMORY_ALLOCATION_ERROR;
+    }
+
+    return ARGON2_OK;
+}
+
+void free_memory(const argon2_context *context, uint8_t *memory,
+                 size_t num, size_t size) {
+    size_t memory_size = num*size;
+    clear_internal_memory(memory, memory_size);
+    if (context->free_cbk) {
+        (context->free_cbk)(memory, memory_size);
+    } else {
+        free(memory);
     }
 }
 
@@ -111,7 +126,7 @@ void NOT_OPTIMIZED secure_wipe_memory(void *v, size_t n) {
 #if defined(_MSC_VER) && VC_GE_2005(_MSC_VER)
     SecureZeroMemory(v, n);
 #elif defined memset_s
-    memset_s(v, n);
+    memset_s(v, n, 0, n);
 #elif defined(__OpenBSD__)
     explicit_bzero(v, n);
 #else
@@ -120,16 +135,13 @@ void NOT_OPTIMIZED secure_wipe_memory(void *v, size_t n) {
 #endif
 }
 
-/*********Memory functions*/
-
-void clear_memory(argon2_instance_t *instance, int clear) {
-    if (instance->memory != NULL && clear) {
-        secure_wipe_memory(instance->memory,
-                           sizeof(block) * instance->memory_blocks);
-    }
+/* Memory clear flag defaults to true. */
+int FLAG_clear_internal_memory = 1;
+void clear_internal_memory(void *v, size_t n) {
+  if (FLAG_clear_internal_memory && v) {
+    secure_wipe_memory(v, n);
+  }
 }
-
-void free_memory(block *memory) { free(memory); }
 
 void finalize(const argon2_context *context, argon2_instance_t *instance) {
     if (context != NULL && instance != NULL) {
@@ -151,26 +163,17 @@ void finalize(const argon2_context *context, argon2_instance_t *instance) {
             store_block(blockhash_bytes, &blockhash);
             blake2b_long(context->out, context->outlen, blockhash_bytes,
                          ARGON2_BLOCK_SIZE);
-            secure_wipe_memory(blockhash.v,
-                               ARGON2_BLOCK_SIZE); /* clear blockhash */
-            secure_wipe_memory(blockhash_bytes,
-                               ARGON2_BLOCK_SIZE); /* clear blockhash_bytes */
+            /* clear blockhash and blockhash_bytes */
+            clear_internal_memory(blockhash.v, ARGON2_BLOCK_SIZE);
+            clear_internal_memory(blockhash_bytes, ARGON2_BLOCK_SIZE);
         }
 
 #ifdef GENKAT
         print_tag(context->out, context->outlen);
 #endif
 
-        /* Clear memory */
-        clear_memory(instance, context->flags & ARGON2_FLAG_CLEAR_PASSWORD);
-
-        /* Deallocate the memory */
-        if (NULL != context->free_cbk) {
-            context->free_cbk((uint8_t *)instance->memory,
-                              instance->memory_blocks * sizeof(block));
-        } else {
-            free_memory(instance->memory);
-        }
+        free_memory(context, (uint8_t *)instance->memory,
+                    instance->memory_blocks, sizeof(block));
     }
 }
 
@@ -250,7 +253,7 @@ static unsigned __stdcall fill_segment_thr(void *thread_data)
 static void *fill_segment_thr(void *thread_data)
 #endif
 {
-    argon2_thread_data *my_data = (argon2_thread_data *)thread_data;
+    argon2_thread_data *my_data = thread_data;
     fill_segment(my_data->instance_ptr, my_data->pos);
     argon2_thread_exit();
     return 0;
@@ -263,7 +266,7 @@ int fill_memory_blocks(argon2_instance_t *instance) {
     int rc = ARGON2_OK;
 
     if (instance == NULL || instance->lanes == 0) {
-         rc = ARGON2_THREAD_FAIL;
+        rc = ARGON2_THREAD_FAIL;
         goto fail;
     }
 
@@ -290,9 +293,9 @@ int fill_memory_blocks(argon2_instance_t *instance) {
 
                 /* 2.1 Join a thread if limit is exceeded */
                 if (l >= instance->threads) {
-                    rc = argon2_thread_join(thread[l - instance->threads]);
-                    if (rc) {
-                        return ARGON2_THREAD_FAIL;
+                    if (argon2_thread_join(thread[l - instance->threads])) {
+                        rc = ARGON2_THREAD_FAIL;
+                        goto fail;
                     }
                 }
 
@@ -301,10 +304,12 @@ int fill_memory_blocks(argon2_instance_t *instance) {
                 position.lane = l;
                 position.slice = (uint8_t)s;
                 position.index = 0;
-                thr_data[l].instance_ptr = instance; 
-                /* preparing the thread input */
-                memcpy(&(thr_data[l].pos), &position, sizeof(argon2_position_t));
-                if (argon2_thread_create(&thread[l], &fill_segment_thr, (void *)&thr_data[l])) {
+                thr_data[l].instance_ptr =
+                    instance; /* preparing the thread input */
+                memcpy(&(thr_data[l].pos), &position,
+                       sizeof(argon2_position_t));
+                if (argon2_thread_create(&thread[l], &fill_segment_thr,
+                                         (void *)&thr_data[l])) {
                     rc = ARGON2_THREAD_FAIL;
                     goto fail;
                 }
@@ -314,7 +319,8 @@ int fill_memory_blocks(argon2_instance_t *instance) {
             }
 
             /* 3. Joining remaining threads */
-            for (l = instance->lanes - instance->threads; l < instance->lanes; ++l) {
+            for (l = instance->lanes - instance->threads; l < instance->lanes;
+                 ++l) {
                 if (argon2_thread_join(thread[l])) {
                     rc = ARGON2_THREAD_FAIL;
                     goto fail;
@@ -355,37 +361,37 @@ int validate_inputs(const argon2_context *context) {
         return ARGON2_OUTPUT_TOO_LONG;
     }
 
-    /* Validate password length */
+    /* Validate password (required param) */
     if (NULL == context->pwd) {
         if (0 != context->pwdlen) {
             return ARGON2_PWD_PTR_MISMATCH;
         }
-    } else {
-        if (ARGON2_MIN_PWD_LENGTH > context->pwdlen) {
-            return ARGON2_PWD_TOO_SHORT;
-        }
-
-        if (ARGON2_MAX_PWD_LENGTH < context->pwdlen) {
-            return ARGON2_PWD_TOO_LONG;
-        }
     }
 
-    /* Validate salt length */
+    if (ARGON2_MIN_PWD_LENGTH > context->pwdlen) {
+      return ARGON2_PWD_TOO_SHORT;
+    }
+
+    if (ARGON2_MAX_PWD_LENGTH < context->pwdlen) {
+        return ARGON2_PWD_TOO_LONG;
+    }
+
+    /* Validate salt (required param) */
     if (NULL == context->salt) {
         if (0 != context->saltlen) {
             return ARGON2_SALT_PTR_MISMATCH;
         }
-    } else {
-        if (ARGON2_MIN_SALT_LENGTH > context->saltlen) {
-            return ARGON2_SALT_TOO_SHORT;
-        }
-
-        if (ARGON2_MAX_SALT_LENGTH < context->saltlen) {
-            return ARGON2_SALT_TOO_LONG;
-        }
     }
 
-    /* Validate secret length */
+    if (ARGON2_MIN_SALT_LENGTH > context->saltlen) {
+        return ARGON2_SALT_TOO_SHORT;
+    }
+
+    if (ARGON2_MAX_SALT_LENGTH < context->saltlen) {
+        return ARGON2_SALT_TOO_LONG;
+    }
+
+    /* Validate secret (optional param) */
     if (NULL == context->secret) {
         if (0 != context->secretlen) {
             return ARGON2_SECRET_PTR_MISMATCH;
@@ -394,13 +400,12 @@ int validate_inputs(const argon2_context *context) {
         if (ARGON2_MIN_SECRET > context->secretlen) {
             return ARGON2_SECRET_TOO_SHORT;
         }
-
         if (ARGON2_MAX_SECRET < context->secretlen) {
             return ARGON2_SECRET_TOO_LONG;
         }
     }
 
-    /* Validate associated data */
+    /* Validate associated data (optional param) */
     if (NULL == context->ad) {
         if (0 != context->adlen) {
             return ARGON2_AD_PTR_MISMATCH;
@@ -409,7 +414,6 @@ int validate_inputs(const argon2_context *context) {
         if (ARGON2_MIN_AD_LENGTH > context->adlen) {
             return ARGON2_AD_TOO_SHORT;
         }
-
         if (ARGON2_MAX_AD_LENGTH < context->adlen) {
             return ARGON2_AD_TOO_LONG;
         }
@@ -486,7 +490,7 @@ void fill_first_blocks(uint8_t *blockhash, const argon2_instance_t *instance) {
         load_block(&instance->memory[l * instance->lane_length + 1],
                    blockhash_bytes);
     }
-    secure_wipe_memory(blockhash_bytes, ARGON2_BLOCK_SIZE);
+    clear_internal_memory(blockhash_bytes, ARGON2_BLOCK_SIZE);
 }
 
 void initial_hash(uint8_t *blockhash, argon2_context *context,
@@ -569,22 +573,13 @@ int initialize(argon2_instance_t *instance, argon2_context *context) {
 
     if (instance == NULL || context == NULL)
         return ARGON2_INCORRECT_PARAMETER;
+    instance->context_ptr = context;
 
     /* 1. Memory allocation */
-
-    if (NULL != context->allocate_cbk) {
-        uint8_t *p;
-        result = context->allocate_cbk(&p, instance->memory_blocks * ARGON2_BLOCK_SIZE);
-
-        if (ARGON2_OK != result) {
-            return result;
-        }
-        instance->memory = (block *)p;
-    } else {
-        result = allocate_memory(&(instance->memory), instance->memory_blocks);
-        if (ARGON2_OK != result) {
-            return result;
-        }
+    result = allocate_memory(context, (uint8_t **)&(instance->memory),
+                             instance->memory_blocks, sizeof(block));
+    if (result != ARGON2_OK) {
+        return result;
     }
 
     /* 2. Initial hashing */
@@ -593,9 +588,9 @@ int initialize(argon2_instance_t *instance, argon2_context *context) {
     /* Hashing all inputs */
     initial_hash(blockhash, context, instance->type);
     /* Zeroing 8 extra bytes */
-    secure_wipe_memory(blockhash + ARGON2_PREHASH_DIGEST_LENGTH,
-                       ARGON2_PREHASH_SEED_LENGTH -
-                           ARGON2_PREHASH_DIGEST_LENGTH);
+    clear_internal_memory(blockhash + ARGON2_PREHASH_DIGEST_LENGTH,
+                          ARGON2_PREHASH_SEED_LENGTH -
+                              ARGON2_PREHASH_DIGEST_LENGTH);
 
 #ifdef GENKAT
     initial_kat(blockhash, context, instance->type);
@@ -605,8 +600,7 @@ int initialize(argon2_instance_t *instance, argon2_context *context) {
      */
     fill_first_blocks(blockhash, instance);
     /* Clearing the hash */
-    secure_wipe_memory(blockhash, ARGON2_PREHASH_SEED_LENGTH);
+    clear_internal_memory(blockhash, ARGON2_PREHASH_SEED_LENGTH);
 
     return ARGON2_OK;
 }
-

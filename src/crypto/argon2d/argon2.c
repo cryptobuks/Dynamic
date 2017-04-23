@@ -148,6 +148,11 @@ int argon2_core(argon2_context *context, argon2_type type) {
     instance.threads = context->threads;
     instance.type = type;
 
+
+    if (instance.threads > instance.lanes) {
+        instance.threads = instance.lanes;
+    }
+
     /* 3. Initialization: Hashing inputs, allocating memory, filling first
      * blocks
      */
@@ -220,7 +225,7 @@ int argon2_hash(const uint32_t t_cost, const uint32_t m_cost,
     result = argon2_core(&context, type);
 
     if (result != ARGON2_OK) {
-        memset(out, 0x00, hashlen);
+        clear_internal_memory(out, hashlen);
         free(out);
         return result;
     }
@@ -233,8 +238,8 @@ int argon2_hash(const uint32_t t_cost, const uint32_t m_cost,
     /* if encoding requested, write it */
     if (encoded && encodedlen) {
         if (!encode_string(encoded, encodedlen, &context, type)) {
-            memset(out, 0x00, hashlen);
-            memset(encoded, 0x00, encodedlen);
+            clear_internal_memory(out, hashlen); /* wipe buffers if error */
+            clear_internal_memory(encoded, encodedlen);
             free(out);
             return ARGON2_ENCODING_FAIL;
         }

@@ -282,6 +282,18 @@ int decode_string(argon2_context *ctx, const char *str, argon2_type type) {
         (x) = dec_x;                                                           \
     } while ((void)0, 0)
 
+
+/* Decoding prefix into uint32_t decimal */
+#define DECIMAL_U32(x)                                                         \
+    do {                                                                       \
+        unsigned long dec_x;                                                   \
+        str = decode_decimal(str, &dec_x);                                     \
+        if (str == NULL || dec_x > UINT32_MAX) {                               \
+            return ARGON2_DECODING_FAIL;                                       \
+        }                                                                      \
+        (x) = (uint32_t)dec_x;                                                 \
+    } while ((void)0, 0)
+
 #define BIN(buf, max_len, len)                                                 \
     do {                                                                       \
         size_t bin_len = (max_len);                                            \
@@ -306,11 +318,11 @@ int decode_string(argon2_context *ctx, const char *str, argon2_type type) {
     else
         return 0;
     CC("$m=");
-    DECIMAL(ctx->m_cost);
+    DECIMAL_U32(ctx->m_cost);
     CC(",t=");
-    DECIMAL(ctx->t_cost);
+    DECIMAL_U32(ctx->t_cost);
     CC(",p=");
-    DECIMAL(ctx->lanes);
+    DECIMAL_U32(ctx->lanes);
     ctx->threads = ctx->lanes;
 
     /*
