@@ -488,15 +488,16 @@ bool CInstantSend::ResolveConflicts(const CTxLockCandidate& txLockCandidate)
 
     for (const CTxIn& txin : txLockCandidate.txLockRequest.vin) {
         uint256 hashLocked;
+        auto itConflicting = pool.mapNextTx.find(txin.prevout);
         if(GetLockedOutPointTxHash(txin.prevout, hashLocked) && txHash != hashLocked) {
             // conflicting with complete lock, ignore current one
             LogPrintf("CInstantSend::ResolveConflicts -- WARNING: Found conflicting completed Transaction Lock, skipping current one, txid=%s, conflicting txid=%s\n",
                     txHash.ToString(), hashLocked.ToString());
             return false; // can't/shouldn't do anything
-        } else if (mempool.mapNextTx.count(txin.prevout)) {
+        } else if (itConflicting != pool.mapNextTx.end()) {
             // conflicting with tx in mempool
             fMempoolConflict = true;
-            const CTransaction *ptxConflicting = mempool.mapNextTx[txin.prevout].ptx;
+            const CTransaction *ptxConflicting = itConflicting->second;
             uint256 hashConflicting = ptxConflicting->GetHash();
             if(HasTxLockRequest(hashConflicting)) {
                 // There can be only one completed lock, the other lock request should never complete,
