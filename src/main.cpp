@@ -26,7 +26,6 @@
 #include "merkleblock.h"
 #include "net.h"
 #include "consensus/params.h"
-#include "policy/fees.h"
 #include "policy/policy.h"
 #include "pow.h"
 #include "privatesend.h"
@@ -100,7 +99,6 @@ bool fEnableReplacement = DEFAULT_ENABLE_REPLACEMENT;
 CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
 
 CTxMemPool mempool(::minRelayTxFee);
-FeeFilterRounder filterRounder(::minRelayTxFee);
 
 struct IteratorComparator
 {
@@ -1134,7 +1132,7 @@ static CAmount GetMinRelayFee(const CTransaction& tx, unsigned int nBytes, bool 
 }
 
 bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
-                              bool* pfMissingInputs,  CFeeRate* txFeeRate, bool fOverrideMempoolLimit, bool fRejectAbsurdFee,
+                              bool* pfMissingInputs, bool fOverrideMempoolLimit, bool fRejectAbsurdFee,
                               std::vector<uint256>& vHashTxnToUncache, bool fDryRun)
 {
     AssertLockHeld(cs_main);
@@ -1196,10 +1194,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
     LOCK(pool.cs); // protect pool.mapNextTx
     for (const CTxIn &txin : tx.vin)
     {
-        auto itConflicting = pool.mapNextTx.find(txin.prevout);
-        if (itConflicting != pool.mapNextTx.end())
+        if (pool.mapNextTx.count(txin.prevout))
         {
-            const CTransaction *ptxConflicting = itConflicting->second;
+            const CTransaction *ptxConflicting = pool.mapNextTx[txin.prevout].ptx;
             if (!setConflicts.count(ptxConflicting->GetHash()))
             {
                 // InstantSend txes are not replacable
@@ -1330,9 +1327,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 
         CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, chainActive.Height(), pool.HasNoInputsOf(tx), inChainInputValue, fSpendsCoinbase, nSigOps, lp);
         unsigned int nSize = entry.GetTxSize();
-        if (txFeeRate) {
-            *txFeeRate = CFeeRate(nFees, nSize);
-        }
         // Added for DDNS
         // Don't accept it if it can't get into a block
         CAmount txMinFee = GetMinRelayFee(tx, nSize, true);
@@ -1443,6 +1437,20 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 
                 // Save these to avoid repeated lookups
                 setIterConflicting.insert(mi);
+
+                // If this entry is "dirty", then we don't have descendant
+                // state for this transaction, which means we probably have
+                // lots of in-mempool descendants.
+                // Don't allow replacements of dirty transactions, to ensure
+                // that we don't spend too much time walking descendants.
+                // This should be rare.
+                if (mi->IsDirty()) {
+                    return state.DoS(0,
+                            error("AcceptToMemoryPool: rejecting replacement %s; cannot replace tx %s with untracked descendants",
+                                hash.ToString(),
+                                mi->GetTx().GetHash().ToString()),
+                            REJECT_NONSTANDARD, "too many potential replacements");
+                }
 
                 // Don't allow the replacement to reduce the feerate of the
                 // mempool.
@@ -1574,7 +1582,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
                     FormatMoney(nModifiedFees - nConflictingFees),
                     (int)nSize - (int)nConflictingSize);
         }
-        pool.RemoveStaged(allConflicting, false);
+        pool.RemoveStaged(allConflicting);
 
         // Store transaction in memory
         pool.addUnchecked(hash, entry, setAncestors, !IsInitialBlockDownload());
@@ -1603,10 +1611,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 }
 
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
-                        bool* pfMissingInputs, CFeeRate* txFeeRate, bool fOverrideMempoolLimit, bool fRejectAbsurdFee, bool fDryRun)
+                        bool* pfMissingInputs, bool fOverrideMempoolLimit, bool fRejectAbsurdFee, bool fDryRun)
 {
     std::vector<uint256> vHashTxToUncache;
-    bool res = AcceptToMemoryPoolWorker(pool, state, tx, fLimitFree, pfMissingInputs, txFeeRate, fOverrideMempoolLimit, fRejectAbsurdFee, vHashTxToUncache, fDryRun);
+    bool res = AcceptToMemoryPoolWorker(pool, state, tx, fLimitFree, pfMissingInputs, fOverrideMempoolLimit, fRejectAbsurdFee, vHashTxToUncache, fDryRun);
     if (!res || fDryRun) {
         if(!res) LogPrint("mempool", "%s: %s %s\n", __func__, tx.GetHash().ToString(), state.GetRejectReason());
         for (const uint256& hashTx : vHashTxToUncache)
@@ -1700,7 +1708,7 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut, const Consensus::P
     if (fAllowSlow) { // use coin database to locate block that contains transaction, and scan it
         int nHeight = -1;
         {
-            const CCoinsViewCache& view = *pcoinsTip;
+            CCoinsViewCache &view = *pcoinsTip;
             const CCoins* coins = view.AccessCoins(hash);
             if (coins)
                 nHeight = coins->nHeight;
@@ -1998,7 +2006,7 @@ void static InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state
     }
 }
 
-void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txundo, int nHeight)
+void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCache &inputs, CTxUndo &txundo, int nHeight)
 {
     // mark inputs spent
     if (!tx.IsCoinBase()) {
@@ -2032,10 +2040,10 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txund
     }
 }
 
-void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight)
+void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCache &inputs, int nHeight)
 {
     CTxUndo txundo;
-    UpdateCoins(tx, inputs, txundo, nHeight);
+    UpdateCoins(tx, state, inputs, txundo, nHeight);
 }
 
 bool CScriptCheck::operator()() {
@@ -2809,7 +2817,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         if (i > 0) {
             blockundo.vtxundo.push_back(CTxUndo());
         }
-        UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight);
+        UpdateCoins(tx, state, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight);
 
         vPos.push_back(std::make_pair(tx.GetHash(), pos));
         pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
@@ -3149,8 +3157,8 @@ bool static DisconnectTip(CValidationState& state, const Consensus::Params& cons
         // ignore validation errors in resurrected transactions
         std::list<CTransaction> removed;
         CValidationState stateDummy;
-        if (tx.IsCoinBase() || !AcceptToMemoryPool(mempool, stateDummy, tx, false, NULL, NULL, true)) {
-            mempool.removeRecursive(tx, removed);
+        if (tx.IsCoinBase() || !AcceptToMemoryPool(mempool, stateDummy, tx, false, NULL, true)) {
+            mempool.remove(tx, removed, true);
         } else if (mempool.exists(tx.GetHash())) {
             vHashUpdate.push_back(tx.GetHash());
         }
@@ -5204,10 +5212,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
 
                 if (!pushed && inv.type == MSG_TX) {
                     CTransaction tx;
-                    int64_t txtime;
-                    // To protect privacy, do not answer getdata using the mempool when
-                    // that TX couldn't have been INVed in reply to a MEMPOOL request.
-                    if (mempool.lookup(inv.hash, tx, txtime) && txtime <= pfrom->timeLastMempoolReq) {
+                    if (mempool.lookup(inv.hash, tx)) {
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
                         ss << tx;
@@ -5922,9 +5927,7 @@ bool static ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vR
 
         mapAlreadyAskedFor.erase(inv.hash);
 
-        CFeeRate txFeeRate = CFeeRate(0);
-
-        if (!AlreadyHave(inv) && AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs, &txFeeRate))
+        if (!AlreadyHave(inv) && AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs))
         {
             // Process custom txes, this changes AlreadyHave to "true"
             if (strCommand == NetMsgType::PSTX) {
@@ -5938,7 +5941,7 @@ bool static ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vR
             }
 
             mempool.check(pcoinsTip);
-            RelayTransaction(tx, txFeeRate);
+            RelayTransaction(tx);
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
                 vWorkQueue.emplace_back(inv.hash, i);
             }
@@ -5971,12 +5974,10 @@ bool static ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vR
 
                     if (setMisbehaving.count(fromPeer))
                         continue;
-                    CFeeRate orphanFeeRate = CFeeRate(0);
-
-                    if (AcceptToMemoryPool(mempool, stateDummy, orphanTx, true, &fMissingInputs2, &orphanFeeRate))
+                    if (AcceptToMemoryPool(mempool, stateDummy, orphanTx, true, &fMissingInputs2))
                     {
                         LogPrint("mempool", "   accepted orphan tx %s\n", orphanHash.ToString());
-                        RelayTransaction(orphanTx, orphanFeeRate);
+                        RelayTransaction(orphanTx);
                         for (unsigned int i = 0; i < orphanTx.vout.size(); i++) {
                             vWorkQueue.emplace_back(orphanHash, i);
                         }
@@ -6059,7 +6060,7 @@ bool static ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vR
                 int nDoS = 0;
                 if (!state.IsInvalid(nDoS) || nDoS == 0) {
                     LogPrintf("Force relaying tx %s from whitelisted peer=%d\n", tx.GetHash().ToString(), pfrom->id);
-                    RelayTransaction(tx, txFeeRate);
+                    RelayTransaction(tx);
                 } else {
                     LogPrintf("Not relaying invalid transaction %s from whitelisted peer=%d (%s)\n", tx.GetHash().ToString(), pfrom->id, FormatStateMessage(state));
                 }
@@ -6306,23 +6307,14 @@ bool static ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vR
                 if (!fInMemPool) continue; // another thread removed since queryHashes, maybe...
                 if (!pfrom->pfilter->IsRelevantAndUpdate(tx)) continue;
             }
-            if (pfrom->minFeeFilter) {
-                CFeeRate feeRate;
-                mempool.lookupFeeRate(hash, feeRate);
-                LOCK(pfrom->cs_feeFilter);
-                if (feeRate.GetFeePerK() < pfrom->minFeeFilter)
-                    continue;
-            }
             vInv.push_back(inv);
             if (vInv.size() == MAX_INV_SZ) {
                 pfrom->PushMessage(NetMsgType::INV, vInv);
                 vInv.clear();
             }
         }
-        if (vInv.size() > 0) {
+        if (vInv.size() > 0)
             pfrom->PushMessage(NetMsgType::INV, vInv);
-        }
-        pto->timeLastMempoolReq = GetTime();
     }
 
 
@@ -6536,19 +6528,8 @@ bool static ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vR
             dynodeSync.ProcessMessage(pfrom, strCommand, vRecv);
             governance.ProcessMessage(pfrom, strCommand, vRecv);
         }
-    else if (strCommand == NetMsgType::FEEFILTER) {
-        CAmount newFeeFilter = 0;
-        vRecv >> newFeeFilter;
-        if (MoneyRange(newFeeFilter)) {
-            {
-                LOCK(pfrom->cs_feeFilter);
-                pfrom->minFeeFilter = newFeeFilter;
-            }
-            LogPrint("net", "received: feefilter of %s from peer=%d\n", CFeeRate(newFeeFilter).ToString(), pfrom->id);
-        }
-    }
-
-    else {
+        else
+        {
             // Ignore unknown commands for extensibility
             LogPrint("net", "Unknown command \"%s\" from peer=%d\n", SanitizeString(strCommand), pfrom->id);
         }
@@ -6678,29 +6659,6 @@ bool ProcessMessages(CNode* pfrom)
     return fOk;
 }
 
-class CompareInvMempoolOrder
-{
-    CTxMemPool *mp;
-public:
-    CompareInvMempoolOrder(CTxMemPool *mempool)
-    {
-        mp = mempool;
-    }
-
-    bool operator()(const CInv &a, const CInv &b)
-    {
-        if (a.type != MSG_TX && b.type != MSG_TX) {
-            return false;
-        } else {
-            if (a.type != MSG_TX) {
-                return true;
-            } else if (b.type != MSG_TX) {
-                return false;
-            }
-            return mp->CompareDepthAndScore(a.hash, b.hash);
-        }
-    }
-};
 
 bool SendMessages(CNode* pto)
 {
@@ -6945,26 +6903,33 @@ bool SendMessages(CNode* pto)
             bool fSendTrickle = pto->fWhitelisted;
             if (pto->nNextInvSend < nNow) {
                 fSendTrickle = true;
-                // Use half the delay for outbound peers, as their is less privacy concern for them.
-                pto->nNextInvSend = PoissonNextSend(nNow, INVENTORY_BROADCAST_INTERVAL >> !pto->fInbound);
+                pto->nNextInvSend = PoissonNextSend(nNow, AVG_INVENTORY_BROADCAST_INTERVAL);
             }
             LOCK(pto->cs_inventory);
-            if (fSendTrickle && pto->vInventoryToSend.size() > 1) {
-                // Topologically and fee-rate sort the inventory we send for privacy and priority reasons.
-                CompareInvMempoolOrder compareInvMempoolOrder(&mempool);
-                std::stable_sort(pto->vInventoryToSend.begin(), pto->vInventoryToSend.end(), compareInvMempoolOrder);
-            }
-            vInv.reserve(std::min<size_t>(INVENTORY_BROADCAST_MAX, pto->vInventoryToSend.size()));
+            vInv.reserve(std::min<size_t>(1000, pto->vInventoryToSend.size()));
             vInvWait.reserve(pto->vInventoryToSend.size());
             for (const CInv& inv : pto->vInventoryToSend)
             {
                 if (inv.type == MSG_TX && pto->filterInventoryKnown.contains(inv.hash))
                     continue;
-                // No reason to drain out at many times the network's capacity,
-                // especially since we have many peers and some will draw much shorter delays.
-                if (vInv.size() >= INVENTORY_BROADCAST_MAX || (inv.type == MSG_TX && !fSendTrickle)) {
-                    vInvWait.push_back(inv);
-                    continue;
+
+                // trickle out tx inv to protect privacy
+                if (inv.type == MSG_TX && !fSendTrickle)
+                {
+                    // 1/4 of tx invs blast to all immediately
+                    static uint256 hashSalt;
+                    if (hashSalt.IsNull())
+                        hashSalt = GetRandHash();
+                    uint256 hashRand = ArithToUint256(UintToArith256(inv.hash) ^ UintToArith256(hashSalt));
+                    hashRand = Hash(BEGIN(hashRand), END(hashRand));
+                    bool fTrickleWait = ((UintToArith256(hashRand) & 3) != 0);
+
+                    if (fTrickleWait)
+                    {
+                        LogPrint("net", "SendMessages -- queued inv(vInvWait): %s  index=%d peer=%d\n", inv.ToString(), vInvWait.size(), pto->id);
+                        vInvWait.push_back(inv);
+                        continue;
+                    }
                 }
 
                 pto->filterInventoryKnown.insert(inv.hash);
@@ -6972,6 +6937,12 @@ bool SendMessages(CNode* pto)
                 LogPrint("net", "SendMessages -- queued inv: %s  index=%d peer=%d\n", inv.ToString(), vInv.size(), pto->id);
 
                 vInv.push_back(inv);
+                if (vInv.size() >= 1000)
+                {
+                    LogPrint("net", "SendMessages -- pushing inv's: count=%d peer=%d\n", vInv.size(), pto->id);
+                    pto->PushMessage(NetMsgType::INV, vInv);
+                    vInv.clear();
+                }
             }
             pto->vInventoryToSend = vInvWait;
         }
@@ -7057,29 +7028,7 @@ bool SendMessages(CNode* pto)
         }
         if (!vGetData.empty())
             pto->PushMessage(NetMsgType::GETDATA, vGetData);
-        //
-        // Message: feefilter
-        //
-        // We don't want white listed peers to filter txs to us if we have -whitelistforcerelay
-        if (pto->nVersion >= FEEFILTER_VERSION && GetBoolArg("-feefilter", DEFAULT_FEEFILTER) &&
-            !(pto->fWhitelisted && GetBoolArg("-whitelistforcerelay", DEFAULT_WHITELISTFORCERELAY))) {
-            CAmount currentFilter = mempool.GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK();
-            int64_t timeNow = GetTimeMicros();
-            if (timeNow > pto->nextSendTimeFeeFilter) {
-                CAmount filterToSend = filterRounder.round(currentFilter);
-                if (filterToSend != pto->lastSentFeeFilter) {
-                    pto->PushMessage(NetMsgType::FEEFILTER, filterToSend);
-                    pto->lastSentFeeFilter = filterToSend;
-                }
-                pto->nextSendTimeFeeFilter = PoissonNextSend(timeNow, AVG_FEEFILTER_BROADCAST_INTERVAL);
-            }
-            // If the fee filter has changed substantially and it's still more than MAX_FEEFILTER_CHANGE_DELAY
-            // until scheduled broadcast, then move the broadcast to within MAX_FEEFILTER_CHANGE_DELAY.
-            else if (timeNow + MAX_FEEFILTER_CHANGE_DELAY * 1000000 < pto->nextSendTimeFeeFilter &&
-                     (currentFilter < 3 * pto->lastSentFeeFilter / 4 || currentFilter > 4 * pto->lastSentFeeFilter / 3)) {
-                pto->nextSendTimeFeeFilter = timeNow + (insecure_rand() % MAX_FEEFILTER_CHANGE_DELAY) * 1000000;
-            }
-        }
+
     }
     return true;
 }

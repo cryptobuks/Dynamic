@@ -2090,7 +2090,7 @@ void CExplicitNetCleanup::callCleanup()
     delete tmp; // Stroustrup's gonna kill me for that
 }
 
-void RelayTransaction(const CTransaction& tx, CFeeRate feerate)
+void RelayTransaction(const CTransaction& tx)
 {
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss.reserve(10000);
@@ -2103,10 +2103,10 @@ void RelayTransaction(const CTransaction& tx, CFeeRate feerate)
     } else { // MSG_TX
         ss << tx;
     }
-    RelayTransaction(tx, feerate, ss);
+    RelayTransaction(tx, ss);
 }
 
-void RelayTransaction(const CTransaction& tx, CFeeRate feerate, const CDataStream& ss)
+void RelayTransaction(const CTransaction& tx, const CDataStream& ss)
 {
     uint256 hash = tx.GetHash();
     int nInv = mapPrivatesendBroadcastTxes.count(hash) ? MSG_PSTX :
@@ -2130,11 +2130,6 @@ void RelayTransaction(const CTransaction& tx, CFeeRate feerate, const CDataStrea
     {
         if(!pnode->fRelayTxes)
             continue;
-        {
-            LOCK(pnode->cs_feeFilter);
-            if (feerate.GetFeePerK() < pnode->minFeeFilter)
-                continue;
-        }
         LOCK(pnode->cs_filter);
         if (pnode->pfilter)
         {
@@ -2442,16 +2437,12 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     nNextInvSend = 0;
     fRelayTxes = false;
     pfilter = new CBloomFilter();
-    timeLastMempoolReq = 0;
     nPingNonceSent = 0;
     nPingUsecStart = 0;
     nPingUsecTime = 0;
     fPingQueued = false;
     fDynode = false;
     nMinPingUsecTime = std::numeric_limits<int64_t>::max();
-    minFeeFilter = 0;
-    lastSentFeeFilter = 0;
-    nextSendTimeFeeFilter = 0;
 
     {
         LOCK(cs_nLastNodeId);
