@@ -1,5 +1,8 @@
 **Dynamic v1.4.0.0**
 
+* mapNextTx: use pointer as key, simplify value
+* Remove Clang workaround for Boost 1.46
+* Force self-recheck on CActiveDynode::ManageStateRemote()
 * Add indirectmap.h and update limitedmap.h
 * Check non-null pindex before potentially referencing
 * Minor improvements to `macdeployqtplus` script.
