@@ -144,6 +144,7 @@ DYNAMIC_CORE_H = \
   protocol.h \
   pubkey.h \
   random.h \
+  reverse_iterator.hpp \
   reverselock.h \
   rpcclient.h \
   rpcprotocol.h \

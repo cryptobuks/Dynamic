@@ -308,7 +308,7 @@ std::unique_ptr<CBlockTemplate> CreateNewBlock(const CChainParams& chainparams, 
             const CTransaction& tx = iter->GetTx();
 
             bool fOrphan = false;
-            BOOST_FOREACH(CTxMemPool::txiter parent, mempool.GetMemPoolParents(iter))
+            for (CTxMemPool::txiter parent : mempool.GetMemPoolParents(iter))
             {
                 if (!inBlock.count(parent)) {
                     fOrphan = true;
@@ -378,7 +378,7 @@ std::unique_ptr<CBlockTemplate> CreateNewBlock(const CChainParams& chainparams, 
             inBlock.insert(iter);
 
             // Add transactions that depend on this one to the priority queue
-            BOOST_FOREACH(CTxMemPool::txiter child, mempool.GetMemPoolChildren(iter))
+            for (CTxMemPool::txiter child : mempool.GetMemPoolChildren(iter))
             {
                 if (fPriorityBlock) {
                     waitPriIter wpiter = waitPriMap.find(child);

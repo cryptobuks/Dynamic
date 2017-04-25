@@ -1,5 +1,6 @@
 **Dynamic v1.4.0.0**
 
+* Remove BOOST_FOREACH & BOOST_REVERSE_FOREACH from codebase
 * GetNumCores() now returns virtual cores as well i.e. Hyperthreaded
 * Simplify CheckWork and rename to ProcessBlockFound()
 * Sentinel uses status of funding votes
