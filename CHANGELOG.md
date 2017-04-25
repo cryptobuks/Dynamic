@@ -1,5 +1,6 @@
 **Dynamic v1.4.0.0**
 
+* Update crypto/argon2d/* & crypto/blake2/* to latest commit 30c78a1 and slim code
 * Fix race when accessing std::locale::classic()
 * Fix some benign races
 * [Qt] fix coincontrol sort issue
@@ -48,7 +49,6 @@
 * Fix issue with headers first sync
 * Update RPC error type in dnsync
 * Ensure Sporks are synced before allowing mining with GBT
-* Threads increased to 4 in hash.h for Argon2d
 * Protocol Bumped to 70400 to only connect to v1.3.0.2 nodes
 * Min Proto Bump for PrivateSend and Dynode POSE_BAN to 70300
 * Inline crypter.cpp with Bitcoin 0.13
@@ -57,10 +57,6 @@
 * Fix potential race condition in vote processing
 * Multiple vote fix
 * Update const usages in crypter.cpp/h
-* Refactor the fill_segment code in the Argon2d core
-* Fix bad pointer copy when using custom in Argon2d core
-* Eliminate redundant function incompatible with Win in black2-impl.h
-* Fix memory leak in fill_memory_blocks in Argon2d core
 * Inline sync.cpp/h with Bitcoin 0.13
 * Inline GBT with Bitcoin 0.13
 * Add scam warning to RPC console
