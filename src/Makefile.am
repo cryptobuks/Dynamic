@@ -115,6 +115,7 @@ DYNAMIC_CORE_H = \
   hdchain.h \
   httprpc.h \
   httpserver.h \
+  indirectmap.h \
   init.h \
   instantsend.h \
   key.h \
