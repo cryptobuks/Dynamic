@@ -14,8 +14,8 @@
 #include <set>
 #include <vector>
 
-#include <boost/unordered_map.hpp>
-#include <boost/unordered_set.hpp>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace memusage
 {
@@ -108,7 +108,7 @@ static inline size_t IncrementalDynamicUsage(const std::map<X, Y, Z>& m)
     return MallocUsage(sizeof(stl_tree_node<std::pair<const X, Y> >));
 }
 
-// Boost data structures
+// Data structures
 
 template<typename X>
 struct unordered_node : private X
@@ -118,13 +118,13 @@ private:
 };
 
 template<typename X, typename Y>
-static inline size_t DynamicUsage(const boost::unordered_set<X, Y>& s)
+static inline size_t DynamicUsage(const std::unordered_set<X, Y>& s)
 {
     return MallocUsage(sizeof(unordered_node<X>)) * s.size() + MallocUsage(sizeof(void*) * s.bucket_count());
 }
 
 template<typename X, typename Y, typename Z>
-static inline size_t DynamicUsage(const boost::unordered_map<X, Y, Z>& m)
+static inline size_t DynamicUsage(const std::unordered_map<X, Y, Z>& m)
 {
     return MallocUsage(sizeof(unordered_node<std::pair<const X, Y> >)) * m.size() + MallocUsage(sizeof(void*) * m.bucket_count());
 }
