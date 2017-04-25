@@ -6099,14 +6099,13 @@ bool static ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vR
             ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
         }
 
-        {
-        LOCK(cs_main);
-
         if (nCount == 0) {
             // Nothing interesting. Stop asking this peers for more headers.
             return true;
         }
 
+        {
+        LOCK(cs_main);
         CNodeState *nodestate = State(pfrom->GetId());
 
         // If this looks like it could be a block announcement (nCount <

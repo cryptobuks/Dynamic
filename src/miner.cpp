@@ -166,16 +166,8 @@ void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash
     memcpy(phash1, &tmp.hash1, 64);
 }
 
-bool CheckWork(const CChainParams& chainparams, CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
+bool ProcessBlockFound(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
 {
-    uint256 hash = pblock->GetHash();
-    uint256 hashTarget = ArithToUint256(arith_uint256().SetCompact(pblock->nBits));
-
-    if (UintToArith256(hash) > UintToArith256(hashTarget))
-        return false;
-
-    //// debug print
-    LogPrintf("CheckWork() : new proof-of-work block found  \n  proof hash: %s  \ntarget: %s\n", hashTarget.GetHex());
     LogPrintf("%s\n", pblock->ToString());
     LogPrintf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue));
 
@@ -183,7 +175,7 @@ bool CheckWork(const CChainParams& chainparams, CBlock* pblock, CWallet& wallet,
     {
         LOCK(cs_main);
         if (pblock->hashPrevBlock != chainActive.Tip()->GetBlockHash())
-        return error("CheckWork() : proof-of-work not meeting target");
+        return error("ProcessBlockFound() : proof-of-work not meeting target");
 
         // Remove key from key pool
         reservekey.KeepKey();
@@ -196,8 +188,8 @@ bool CheckWork(const CChainParams& chainparams, CBlock* pblock, CWallet& wallet,
 
         // Process this block the same as if we had received it from another node
         CValidationState state;
-        if (!ProcessNewBlock(state, chainparams, NULL, pblock, true, NULL))
-            return error("CheckWork() : ProcessBlock, block not accepted");
+        if (!ProcessNewBlock(state, Params(), NULL, pblock, true, NULL))
+            return error("ProcessBlockFound() : ProcessBlock, block not accepted");
     }
 
     return true;

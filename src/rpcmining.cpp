@@ -540,7 +540,7 @@ UniValue getwork(const UniValue& params, bool fHelp)
 
         assert(pwalletMain != NULL);
         
-		return CheckWork(Params(), pblock, *pwalletMain, *pMiningKey);
+		return ProcessBlockFound(pblock, *pwalletMain, *pMiningKey);
     }
 }
 
