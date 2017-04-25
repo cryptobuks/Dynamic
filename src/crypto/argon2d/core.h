@@ -1,21 +1,18 @@
-// Copyright (c) 2009-2017 Satoshi Nakamoto
-// Copyright (c) 2009-2017 The Bitcoin Developers
-// Copyright (c) 2014-2017 The Dash Developers
-// Copyright (c) 2016-2017 Duality Blockchain Solutions Developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 /*
- * Argon2 source code package
+ * Argon2 reference source code package - reference C implementations
  *
- * Written by Daniel Dinu and Dmitry Khovratovich, 2015
+ * Copyright 2015
+ * Daniel Dinu, Dmitry Khovratovich, Jean-Philippe Aumasson, and Samuel Neves
  *
- * This work is licensed under a Creative Commons CC0 1.0 License/Waiver.
+ * You may use this work under the terms of a Creative Commons CC0 1.0 
+ * License/Waiver or the Apache Public License 2.0, at your option. The terms of
+ * these licenses can be found at:
  *
- * You should have received a copy of the CC0 Public Domain Dedication along
- * with
- * this software. If not, see
- * <http://creativecommons.org/publicdomain/zero/1.0/>.
+ * - CC0 1.0 Universal : http://creativecommons.org/publicdomain/zero/1.0
+ * - Apache 2.0        : http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * You should have received a copy of both of these licenses along with this
+ * software. If not, they may be obtained at the above URLs.
  */
 
 #ifndef ARGON2_CORE_H
@@ -28,9 +25,8 @@
 /**********************Argon2 internal constants*******************************/
 
 enum argon2_core_constants {
-    /* Version of the algorithm */
+    /* Version of the algorithm */   
     ARGON2_VERSION_NUMBER = 0x10,
-
     /* Memory block size in bytes */
     ARGON2_BLOCK_SIZE = 1024,
     ARGON2_QWORDS_IN_BLOCK = ARGON2_BLOCK_SIZE / 8,
@@ -65,6 +61,7 @@ void copy_block(block *dst, const block *src);
 
 /* XOR @src onto @dst bytewise */
 void xor_block(block *dst, const block *src);
+
 /*
  * Argon2 instance: memory pointer, number of passes, amount of memory, type,
  * and derived values.
@@ -73,6 +70,7 @@ void xor_block(block *dst, const block *src);
  */
 typedef struct Argon2_instance_t {
     block *memory;          /* Memory pointer */
+    uint32_t version;
     uint32_t passes;        /* Number of passes */
     uint32_t memory_blocks; /* Number of blocks in memory */
     uint32_t segment_length;
@@ -104,14 +102,16 @@ typedef struct Argon2_thread_data {
 /*************************Argon2 core functions********************************/
 
 /* Allocates memory to the given pointer, uses the appropriate allocator as
- + * specified in the context. Total allocated memory is num*size.
- + * @param context argon2_context which specifies the allocator * @param memory pointer to the pointer to the memory
+ * specified in the context. Total allocated memory is num*size.
+ * @param context argon2_context which specifies the allocator
+ * @param memory pointer to the pointer to the memory
  * @param size the size in bytes for each element to be allocated
  * @param num the number of elements to be allocated
  * @return ARGON2_OK if @memory is a valid pointer and memory is allocated
  */
 int allocate_memory(const argon2_context *context, uint8_t **memory,
                     size_t num, size_t size);
+
 /*
  * Frees memory at the given pointer, uses the appropriate deallocator as
  * specified in the context. Also cleans the memory using clear_internal_memory.
@@ -124,7 +124,7 @@ void free_memory(const argon2_context *context, uint8_t *memory,
                  size_t num, size_t size);
 
 /* Function that securely cleans the memory. This ignores any flags set
- + * regarding clearing memory. Usually one just calls clear_internal_memory.
+ * regarding clearing memory. Usually one just calls clear_internal_memory.
  * @param mem Pointer to the memory
  * @param s Memory size in bytes
  */

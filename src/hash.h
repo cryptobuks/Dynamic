@@ -277,7 +277,7 @@ inline int Argon2d_Phase1_Hash(const void *in, void *out) {
     context.threads = 4;  // Threads
     context.t_cost = 1;   // Iterations
 
-    return argon2_core(&context, Argon2_d);
+    return argon2_ctx(&context, Argon2_d);
 }
 
     /// Argon2d Phase 2 Hash parameters for the next 5 years after phase 1
@@ -316,7 +316,7 @@ inline int Argon2d_Phase2_Hash(const void *in, void *out) {
     context.threads = 2;  // Threads
     context.t_cost = 1;    // Iterations
     
-    return argon2_core(&context, Argon2_d);
+    return argon2_ctx(&context, Argon2_d);
 }
 
 inline uint256 hash_Argon2d(const void* input, const unsigned int& hashPhase) {

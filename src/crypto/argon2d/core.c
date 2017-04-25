@@ -1,21 +1,18 @@
-// Copyright (c) 2009-2017 Satoshi Nakamoto
-// Copyright (c) 2009-2017 The Bitcoin Developers
-// Copyright (c) 2014-2017 The Dash Developers
-// Copyright (c) 2016-2017 Duality Blockchain Solutions Developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 /*
- * Argon2 source code package
+ * Argon2 reference source code package - reference C implementations
  *
- * Written by Daniel Dinu and Dmitry Khovratovich, 2015
+ * Copyright 2015
+ * Daniel Dinu, Dmitry Khovratovich, Jean-Philippe Aumasson, and Samuel Neves
  *
- * This work is licensed under a Creative Commons CC0 1.0 License/Waiver.
+ * You may use this work under the terms of a Creative Commons CC0 1.0 
+ * License/Waiver or the Apache Public License 2.0, at your option. The terms of
+ * these licenses can be found at:
  *
- * You should have received a copy of the CC0 Public Domain Dedication along
- * with
- * this software. If not, see
- * <http://creativecommons.org/publicdomain/zero/1.0/>.
+ * - CC0 1.0 Universal : http://creativecommons.org/publicdomain/zero/1.0
+ * - Apache 2.0        : http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * You should have received a copy of both of these licenses along with this
+ * software. If not, they may be obtained at the above URLs.
  */
 
 /*For memory wiping*/
@@ -37,10 +34,6 @@
 #include "thread.h"
 #include "../blake2/blake2.h"
 #include "../blake2/blake2-impl.h"
-
-#ifdef GENKAT
-#include "genkat.h"
-#endif
 
 #if defined(__clang__)
 #if __has_attribute(optnone)
@@ -84,6 +77,8 @@ static void store_block(void *output, const block *src) {
         store64((uint8_t *)output + i * sizeof(src->v[i]), src->v[i]);
     }
 }
+
+/***************Memory functions*****************/
 
 int allocate_memory(const argon2_context *context, uint8_t **memory,
                     size_t num, size_t size) {
@@ -168,10 +163,6 @@ void finalize(const argon2_context *context, argon2_instance_t *instance) {
             clear_internal_memory(blockhash_bytes, ARGON2_BLOCK_SIZE);
         }
 
-#ifdef GENKAT
-        print_tag(context->out, context->outlen);
-#endif
-
         free_memory(context, (uint8_t *)instance->memory,
                     instance->memory_blocks, sizeof(block));
     }
@@ -247,6 +238,23 @@ uint32_t index_alpha(const argon2_instance_t *instance,
     return absolute_position;
 }
 
+/* Single-threaded version for p=1 case */
+static int fill_memory_blocks_st(argon2_instance_t *instance) {
+    uint32_t r, s, l;
+
+    for (r = 0; r < instance->passes; ++r) {
+        for (s = 0; s < ARGON2_SYNC_POINTS; ++s) {
+            for (l = 0; l < instance->lanes; ++l) {
+                argon2_position_t position = {r, l, (uint8_t)s, 0};
+                fill_segment(instance, position);
+            }
+        }
+    }
+    return ARGON2_OK;
+}
+
+#if !defined(ARGON2_NO_THREADS)
+
 #ifdef _WIN32
 static unsigned __stdcall fill_segment_thr(void *thread_data)
 #else
@@ -259,16 +267,12 @@ static void *fill_segment_thr(void *thread_data)
     return 0;
 }
 
-int fill_memory_blocks(argon2_instance_t *instance) {
+/* Multi-threaded version for p > 1 case */
+static int fill_memory_blocks_mt(argon2_instance_t *instance) {
     uint32_t r, s;
     argon2_thread_handle_t *thread = NULL;
     argon2_thread_data *thr_data = NULL;
     int rc = ARGON2_OK;
-
-    if (instance == NULL || instance->lanes == 0) {
-        rc = ARGON2_THREAD_FAIL;
-        goto fail;
-    }
 
     /* 1. Allocating space for threads */
     thread = calloc(instance->lanes, sizeof(argon2_thread_handle_t));
@@ -327,10 +331,6 @@ int fill_memory_blocks(argon2_instance_t *instance) {
                 }
             }
         }
-
-#ifdef GENKAT
-        internal_kat(instance, r); /* Print all memory blocks */
-#endif
     }
 
 fail:
@@ -341,6 +341,20 @@ fail:
         free(thr_data);
     }
     return rc;
+}
+
+#endif /* ARGON2_NO_THREADS */
+
+int fill_memory_blocks(argon2_instance_t *instance) {
+	if (instance == NULL || instance->lanes == 0) {
+	    return ARGON2_INCORRECT_PARAMETER;
+    }
+#if defined(ARGON2_NO_THREADS)
+    return fill_memory_blocks_st(instance);
+#else
+    return instance->threads == 1 ?
+			fill_memory_blocks_st(instance) : fill_memory_blocks_mt(instance);
+#endif
 }
 
 int validate_inputs(const argon2_context *context) {
@@ -428,7 +442,7 @@ int validate_inputs(const argon2_context *context) {
         return ARGON2_MEMORY_TOO_MUCH;
     }
 
-    if (context->m_cost < 8*context->lanes) {
+    if (context->m_cost < 8 * context->lanes) {
         return ARGON2_MEMORY_TOO_LITTLE;
     }
 
@@ -472,8 +486,8 @@ int validate_inputs(const argon2_context *context) {
 
 void fill_first_blocks(uint8_t *blockhash, const argon2_instance_t *instance) {
     uint32_t l;
-    /* Make the first and second block in each lane as G(H0||i||0) or
-       G(H0||i||1) */
+    /* Make the first and second block in each lane as G(H0||0||i) or
+       G(H0||1||i) */
     uint8_t blockhash_bytes[ARGON2_BLOCK_SIZE];
     for (l = 0; l < instance->lanes; ++l) {
 
@@ -516,7 +530,7 @@ void initial_hash(uint8_t *blockhash, argon2_context *context,
     store32(&value, context->t_cost);
     blake2b_update(&BlakeHash, (const uint8_t *)&value, sizeof(value));
 
-    store32(&value, ARGON2_VERSION_NUMBER);
+    store32(&value, ARGON2_VERSION_NUMBER);        
     blake2b_update(&BlakeHash, (const uint8_t *)&value, sizeof(value));
 
     store32(&value, (uint32_t)type);
@@ -591,10 +605,6 @@ int initialize(argon2_instance_t *instance, argon2_context *context) {
     clear_internal_memory(blockhash + ARGON2_PREHASH_DIGEST_LENGTH,
                           ARGON2_PREHASH_SEED_LENGTH -
                               ARGON2_PREHASH_DIGEST_LENGTH);
-
-#ifdef GENKAT
-    initial_kat(blockhash, context, instance->type);
-#endif
 
     /* 3. Creating first blocks, we always have at least two blocks in a slice
      */

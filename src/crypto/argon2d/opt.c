@@ -1,21 +1,18 @@
-// Copyright (c) 2009-2017 Satoshi Nakamoto
-// Copyright (c) 2009-2017 The Bitcoin Developers
-// Copyright (c) 2014-2017 The Dash Developers
-// Copyright (c) 2016-2017 Duality Blockchain Solutions Developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 /*
- * Argon2 source code package
+ * Argon2 reference source code package - reference C implementations
  *
- * Written by Daniel Dinu and Dmitry Khovratovich, 2015
+ * Copyright 2015
+ * Daniel Dinu, Dmitry Khovratovich, Jean-Philippe Aumasson, and Samuel Neves
  *
- * This work is licensed under a Creative Commons CC0 1.0 License/Waiver.
+ * You may use this work under the terms of a Creative Commons CC0 1.0 
+ * License/Waiver or the Apache Public License 2.0, at your option. The terms of
+ * these licenses can be found at:
  *
- * You should have received a copy of the CC0 Public Domain Dedication along
- * with
- * this software. If not, see
- * <http://creativecommons.org/publicdomain/zero/1.0/>.
+ * - CC0 1.0 Universal : http://creativecommons.org/publicdomain/zero/1.0
+ * - Apache 2.0        : http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * You should have received a copy of both of these licenses along with this
+ * software. If not, they may be obtained at the above URLs.
  */
 
 #include <stdint.h>
@@ -23,12 +20,22 @@
 #include <stdlib.h>
 
 #include "argon2.h"
-#include "opt.h"
+#include "core.h"
 
 #include "../blake2/blake2.h"
 #include "../blake2/blamka-round-opt.h"
 
-void fill_block(__m128i *state, const block *ref_block, block *next_block, int with_xor) {
+/*
+ * Function fills a new memory block and optionally XORs the old block over the new one.
+ * Memory must be initialized.
+ * @param state Pointer to the just produced block. Content will be updated(!)
+ * @param ref_block Pointer to the reference block
+ * @param next_block Pointer to the block to be XORed over. May coincide with @ref_block
+ * @param with_xor Whether to XOR into the new block (1) or just overwrite (0)
+ * @pre all block pointers must be valid
+ */
+static void fill_block(__m128i *state, const block *ref_block,
+                       block *next_block, int with_xor) {
     __m128i block_XY[ARGON2_OWORDS_IN_BLOCK];
     unsigned int i;
 
@@ -48,14 +55,14 @@ void fill_block(__m128i *state, const block *ref_block, block *next_block, int w
 
     for (i = 0; i < 8; ++i) {
         BLAKE2_ROUND(state[8 * i + 0], state[8 * i + 1], state[8 * i + 2],
-                     state[8 * i + 3], state[8 * i + 4], state[8 * i + 5],
-                     state[8 * i + 6], state[8 * i + 7]);
+            state[8 * i + 3], state[8 * i + 4], state[8 * i + 5],
+            state[8 * i + 6], state[8 * i + 7]);
     }
 
     for (i = 0; i < 8; ++i) {
         BLAKE2_ROUND(state[8 * 0 + i], state[8 * 1 + i], state[8 * 2 + i],
-                     state[8 * 3 + i], state[8 * 4 + i], state[8 * 5 + i],
-                     state[8 * 6 + i], state[8 * 7 + i]);
+            state[8 * 3 + i], state[8 * 4 + i], state[8 * 5 + i],
+            state[8 * 6 + i], state[8 * 7 + i]);
     }
 
     for (i = 0; i < ARGON2_OWORDS_IN_BLOCK; i++) {
@@ -82,8 +89,8 @@ static void next_addresses(block *address_block, block *input_block) {
     fill_block(zero2_block, address_block, address_block, 0);
 }
 
-void fill_segment(const argon2_instance_t *instance, argon2_position_t position) {
-
+void fill_segment(const argon2_instance_t *instance,
+                  argon2_position_t position) {
     block *ref_block = NULL, *curr_block = NULL;
     block address_block, input_block;
     uint64_t pseudo_rand, ref_index, ref_lane;
@@ -94,19 +101,6 @@ void fill_segment(const argon2_instance_t *instance, argon2_position_t position)
 
     if (instance == NULL) {
         return;
-    }
-
-    data_independent_addressing = (instance->type == Argon2_i);
-
-    if (data_independent_addressing) {
-        init_block_value(&input_block, 0);
-
-        input_block.v[0] = position.pass;
-        input_block.v[1] = position.lane;
-        input_block.v[2] = position.slice;
-        input_block.v[3] = instance->memory_blocks;
-        input_block.v[4] = instance->passes;
-        input_block.v[5] = instance->type;
     }
 
     starting_index = 0;
@@ -121,7 +115,8 @@ void fill_segment(const argon2_instance_t *instance, argon2_position_t position)
     }
 
     /* Offset of the current block */
-    curr_offset = position.lane * instance->lane_length + position.slice * instance->segment_length + starting_index;
+    curr_offset = position.lane * instance->lane_length +
+                  position.slice * instance->segment_length + starting_index;
 
     if (0 == curr_offset % instance->lane_length) {
         /* Last block in this lane */
@@ -133,7 +128,8 @@ void fill_segment(const argon2_instance_t *instance, argon2_position_t position)
 
     memcpy(state, ((instance->memory + prev_offset)->v), ARGON2_BLOCK_SIZE);
 
-    for (i = starting_index; i < instance->segment_length; ++i, ++curr_offset, ++prev_offset) {
+    for (i = starting_index; i < instance->segment_length;
+         ++i, ++curr_offset, ++prev_offset) {
         /*1.1 Rotating prev_offset if needed */
         if (curr_offset % instance->lane_length == 1) {
             prev_offset = curr_offset - 1;
@@ -166,13 +162,11 @@ void fill_segment(const argon2_instance_t *instance, argon2_position_t position)
                                 ref_lane == position.lane);
 
         /* 2 Creating a new block */
-        ref_block = instance->memory + instance->lane_length * ref_lane + ref_index;
+        ref_block =
+            instance->memory + instance->lane_length * ref_lane + ref_index;
         curr_block = instance->memory + curr_offset;
+            
+        fill_block(state, ref_block, curr_block, 0);
 
-        if(0 == position.pass) {
-            fill_block(state, ref_block, curr_block, 0);
-        } else {
-            fill_block(state, ref_block, curr_block, 1);
-        }
     }
 }
