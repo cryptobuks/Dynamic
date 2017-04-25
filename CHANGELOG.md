@@ -1,5 +1,6 @@
 **Dynamic v1.4.0.0**
 
+* Minor improvements to `macdeployqtplus` script.
 * Remove BOOST_FOREACH & BOOST_REVERSE_FOREACH from codebase
 * GetNumCores() now returns virtual cores as well i.e. Hyperthreaded
 * Simplify CheckWork and rename to ProcessBlockFound()
