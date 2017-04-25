@@ -2443,6 +2443,7 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     fPingQueued = false;
     fDynode = false;
     nMinPingUsecTime = std::numeric_limits<int64_t>::max();
+    timeLastMempoolReq = 0;
 
     {
         LOCK(cs_nLastNodeId);
