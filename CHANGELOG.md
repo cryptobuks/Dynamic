@@ -1,5 +1,6 @@
 **Dynamic v1.4.0.0**
 
+* Add indirectmap.h and update limitedmap.h
 * Check non-null pindex before potentially referencing
 * Minor improvements to `macdeployqtplus` script.
 * Remove BOOST_FOREACH & BOOST_REVERSE_FOREACH from codebase
