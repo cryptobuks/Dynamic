@@ -1,5 +1,6 @@
 **Dynamic v1.4.0.0**
 
+* mapNextTx: use pointer as key, simplify value
 * Mempool: Add tracking of ancestor packages
 * Eliminate TX trickle bypass, sort TX invs for privacy and priority.
 * Return mempool queries in dependency order
