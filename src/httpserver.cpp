@@ -146,9 +146,8 @@ public:
     void WaitExit()
     {
         std::unique_lock<std::mutex> lock(cs);
-        while (numThreads > 0){
+        while (numThreads > 0)
             cond.wait(lock);
-        }
     }
 
     /** Return current depth of queue */
