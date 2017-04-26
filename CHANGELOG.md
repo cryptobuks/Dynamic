@@ -1,5 +1,14 @@
 **Dynamic v1.4.0.0**
 
+* Mempool: Add tracking of ancestor packages
+* Eliminate TX trickle bypass, sort TX invs for privacy and priority.
+* Return mempool queries in dependency order
+* [trivial] Add missing const qualifiers/repair definition
+* Remove obsolete reference to CValidationState from UpdateCoins.
+* Do not use mempool for GETDATA for tx accepted after the last mempool request
+* Add missing mempool lock for CalculateMemPoolAncestors
+* Remove Clang workaround for Boost 1.46
+* Force self-recheck on CActiveDynode::ManageStateRemote()
 * Add indirectmap.h and update limitedmap.h
 * Check non-null pindex before potentially referencing
 * Minor improvements to `macdeployqtplus` script.
