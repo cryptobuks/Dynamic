@@ -107,6 +107,9 @@ private:
     uint64_t nSizeWithDescendants;  //! ... and size
     CAmount nModFeesWithDescendants;  //! ... and total fees (all including us)
 
+    // Analogous statistics for ancestor transactions
+    uint64_t nCountWithAncestors;
+
 public:
     CTxMemPoolEntry(const CTransaction& _tx, const CAmount& _nFee,
                     int64_t _nTime, double _entryPriority, unsigned int _entryHeight,
@@ -150,6 +153,9 @@ public:
     CAmount GetModFeesWithDescendants() const { return nModFeesWithDescendants; }
 
     bool GetSpendsCoinbase() const { return spendsCoinbase; }
+
+    uint64_t GetCountWithAncestors() const { return nCountWithAncestors; }
+
 };
 
 // Helpers for modifying CTxMemPool::mapTx, which is a boost multi_index.
@@ -488,6 +494,7 @@ public:
                         std::list<CTransaction>& conflicts, bool fCurrentEstimate = true);
     void clear();
     void _clear(); //lock free
+    bool CompareDepthAndScore(const uint256& hasha, const uint256& hashb);
     void queryHashes(std::vector<uint256>& vtxid);
     void pruneSpent(const uint256& hash, CCoins &coins);
     unsigned int GetTransactionsUpdated() const;
