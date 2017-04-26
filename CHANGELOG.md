@@ -16,7 +16,7 @@
 * GetNumCores() now returns virtual cores as well i.e. Hyperthreaded
 * Simplify CheckWork and rename to ProcessBlockFound()
 * Sentinel uses status of funding votes
-* Update crypto/argon2d/* & crypto/blake2/* to latest commit 30c78a1 and slim code
+* Update crypto/argon2d/ & crypto/blake2/ to latest commit 30c78a1 and slim code
 * Fix race when accessing std::locale::classic()
 * Fix some benign races
 * [Qt] fix coincontrol sort issue
