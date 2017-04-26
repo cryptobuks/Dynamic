@@ -1,5 +1,7 @@
 **Dynamic v1.4.0.0**
 
+* Split HD chain: external/internal
+* Top up keypool on HD wallet encryption
 * mapNextTx: use pointer as key, simplify value
 * Mempool: Add tracking of ancestor packages
 * Eliminate TX trickle bypass, sort TX invs for privacy and priority.
