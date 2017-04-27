@@ -450,6 +450,11 @@ void DynamicApplication::requestInitialize()
 
 void DynamicApplication::requestShutdown()
 {
+    // Show a simple window indicating shutdown status
+    // Do this first as some of the steps may take some time below,
+    // for example the RPC console may still be executing a command.
+    ShutdownWindow::showShutdownWindow(window);
+
     qDebug() << __func__ << ": Requesting shutdown";
     startThread();
     window->hide();
@@ -463,9 +468,6 @@ void DynamicApplication::requestShutdown()
 #endif
     delete clientModel;
     clientModel = 0;
-
-    // Show a simple window indicating shutdown status
-    ShutdownWindow::showShutdownWindow(window);
 
     // Request shutdown from core thread
     Q_EMIT requestedShutdown();

@@ -679,6 +679,12 @@ void DynamicGUI::setClientModel(ClientModel *_clientModel)
             dockIconMenu->clear();
         }
 #endif
+        // Propagate cleared model to child objects
+        rpcConsole->setClientModel(nullptr);
+#ifdef ENABLE_WALLET
+        walletFrame->setClientModel(nullptr);
+#endif // ENABLE_WALLET
+        unitDisplayControl->setOptionsModel(nullptr);
     }
 }
 
