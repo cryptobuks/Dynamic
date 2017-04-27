@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DYNAMIC_SUPPORT_LOCKEDPOOL_H
-#define DYNAMIC_SUPPORT_LOCKEDPOOL_H
+#ifndef BITCOIN_SUPPORT_LOCKEDPOOL_H
+#define BITCOIN_SUPPORT_LOCKEDPOOL_H
 
 #include <stdint.h>
 #include <list>
@@ -109,7 +109,7 @@ private:
  * An arena manages a contiguous region of memory. The pool starts out with one arena
  * but can grow to multiple arenas if the need arises.
  *
- * Unlike a normal C heap, the administrative structures are seperate from the managed
+ * Unlike a normal C heap, the administrative structures are separate from the managed
  * memory. This has been done as the sizes and bases of objects are not in themselves sensitive
  * information, as to conserve precious locked memory. In some operating systems
  * the amount of memory that can be locked is small.
@@ -228,4 +228,4 @@ private:
     static std::once_flag init_flag;
 };
 
-#endif // DYNAMIC_SUPPORT_LOCKEDPOOL_H
+#endif // BITCOIN_SUPPORT_LOCKEDPOOL_H

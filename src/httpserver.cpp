@@ -149,6 +149,12 @@ public:
         while (numThreads > 0)
             cond.wait(lock);
     }
+    /** Return current depth of queue */
+    size_t Depth()
+    {
+        std::unique_lock<std::mutex> lock(cs);
+        return queue.size();
+    }
 };
 
 struct HTTPPathHandler
@@ -471,14 +477,8 @@ void StopHTTPServer()
     LogPrint("http", "Stopping HTTP server\n");
     if (workQueue) {
         LogPrint("http", "Waiting for HTTP worker threads to exit\n");
-#ifndef WIN32
-        // ToDo: Disabling WaitExit() for Windows platforms is an ugly workaround for the wallet not
-        // closing during a repair-restart. It doesn't hurt, though, because threadHTTP.timed_join
-        // below takes care of this and sends a loopbreak.
         workQueue->WaitExit();
-#endif        
         delete workQueue;
-        workQueue = nullptr;
     }
     if (eventBase) {
         LogPrint("http", "Waiting for HTTP event thread to exit\n");
@@ -504,6 +504,7 @@ void StopHTTPServer()
     }
     LogPrint("http", "Stopped HTTP server\n");
 }
+
 
 struct event_base* EventBase()
 {
