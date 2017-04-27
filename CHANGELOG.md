@@ -1,5 +1,6 @@
 **Dynamic v1.4.0.0**
 
+* Switch CTransaction storage in mempool to std::shared_ptr
 * Split HD chain: external/internal
 * Top up keypool on HD wallet encryption
 * mapNextTx: use pointer as key, simplify value
@@ -32,7 +33,6 @@
 * depends: fix zlib build on osx
 * Fix parameter naming inconsistencies
 * scheduler: fix sub-second precision with boost < 1.50
-* build: fix dynamic-config.h regeneration after touching build files
 * [Qt] Fix for issues with startup and multiple monitors on Windows.
 * Update error message for old wallet version issues
 * Lock Icon can now be clicked to unlock wallet

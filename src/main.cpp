@@ -5199,10 +5199,11 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
 
                 if (!pushed && inv.type == MSG_TX) {
                     CTransaction tx;
-                    int64_t txtime;
+                    auto txinfo = mempool.info(inv.hash);
                     // To protect privacy, do not answer getdata using the mempool when
                     // that TX couldn't have been INVed in reply to a MEMPOOL request.
-                    if (mempool.lookup(inv.hash, tx, txtime) && txtime <= pfrom->timeLastMempoolReq) {
+                    if (txinfo.tx && txinfo.nTime <= pfrom->timeLastMempoolReq) {
+                        tx = *txinfo.tx;
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
                         ss << tx;
@@ -6286,16 +6287,13 @@ bool static ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vR
         }
         LOCK2(cs_main, pfrom->cs_filter);
 
-        std::vector<uint256> vtxid;
-        mempool.queryHashes(vtxid);
+        auto vtxinfo = mempool.infoAll();
         std::vector<CInv> vInv;
-        for (uint256& hash : vtxid) {
+        for (const auto& txinfo : vtxinfo) {
+            const uint256& hash = txinfo.tx->GetHash();
             CInv inv(MSG_TX, hash);
             if (pfrom->pfilter) {
-                CTransaction tx;
-                bool fInMemPool = mempool.lookup(hash, tx);
-                if (!fInMemPool) continue; // another thread removed since queryHashes, maybe...
-                if (!pfrom->pfilter->IsRelevantAndUpdate(tx)) continue;
+                if (!pfrom->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;
             }
             vInv.push_back(inv);
             if (vInv.size() == MAX_INV_SZ) {
