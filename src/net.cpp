@@ -789,7 +789,7 @@ int CNetMessage::readData(const char *pch, unsigned int nBytes)
 }
 
 // requires LOCK(cs_vSend)
-void SocketSendData(CNode *pnode)
+size_t SocketSendData(CNode *pnode)
 {
     std::deque<CSerializeData>::iterator it = pnode->vSendMsg.begin();
 
@@ -1092,24 +1092,18 @@ void ThreadSocketHandler()
             for (CNode* pnode : vNodesDisconnectedCopy)
             {
                 // wait until threads are done using it
-                if (pnode->GetRefCount() <= 0)
-                {
+                if (pnode->GetRefCount() <= 0) {
                     bool fDelete = false;
                     {
-                        TRY_LOCK(pnode->cs_vSend, lockSend);
-                        if (lockSend)
-                        {
-                            TRY_LOCK(pnode->cs_vRecvMsg, lockRecv);
-                            if (lockRecv)
-                            {
-                                TRY_LOCK(pnode->cs_inventory, lockInv);
-                                if (lockInv)
-                                    fDelete = true;
+                        TRY_LOCK(pnode->cs_inventory, lockInv);
+                        if (lockInv) {
+                            TRY_LOCK(pnode->cs_vSend, lockSend);
+                            if (lockSend) {
+                                fDelete = true;
                             }
                         }
                     }
-                    if (fDelete)
-                    {
+                    if (fDelete) {
                         vNodesDisconnected.remove(pnode);
                         delete pnode;
                     }
@@ -1174,8 +1168,8 @@ void ThreadSocketHandler()
                 // * We wait for data to be received (and disconnect after timeout).
                 // * We process a message in the buffer (message handler thread).
                 {
-                    TRY_LOCK(pnode->cs_vSend, lockSend);
-                    if (lockSend && !pnode->vSendMsg.empty()) {
+                    LOCK(pnode->cs_vSend);
+                    if (!pnode->vSendMsg.empty()) {
                         FD_SET(pnode->hSocket, &fdsetSend);
                         continue;
                     }
@@ -1278,9 +1272,8 @@ void ThreadSocketHandler()
                 continue;
             if (FD_ISSET(pnode->hSocket, &fdsetSend))
             {
-                TRY_LOCK(pnode->cs_vSend, lockSend);
-                if (lockSend)
-                    SocketSendData(pnode);
+                LOCK(pnode->cs_vSend);
+                size_t nBytes = SocketSendData(pnode);
             }
 
             //
