@@ -1272,8 +1272,9 @@ void ThreadSocketHandler()
                 continue;
             if (FD_ISSET(pnode->hSocket, &fdsetSend))
             {
-                LOCK(pnode->cs_vSend);
-                size_t nBytes = SocketSendData(pnode);
+                TRY_LOCK(pnode->cs_vSend, lockSend);
+                if (lockSend)
+                    SocketSendData(pnode);
             }
 
             //
