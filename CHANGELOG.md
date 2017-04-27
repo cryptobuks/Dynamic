@@ -1,5 +1,18 @@
 **Dynamic v1.4.0.0**
 
+* Add OS_WINDOWS_CROSSCOMPILE | NATIVE_WINDOWS to build_detect_platform for 1.20
+* Remove unused code from dbwrapper/dynamic-tx/httpserver/rpcserver/sync/tests
+* Update LevelDB from 1.18 to 1.20
+* [QT] Avoid OpenSSL certstore-related memory leak 
+* [QT] Avoid shutdownwindow-related memory leak 
+* Revert until later date
+* [QT] Avoid splash-screen related memory leak 
+* [QT] Prevent thread/memory leak on exiting RPCConsole
+* [QT] Plug many memory leaks
+* Move LOCK in net.cpp
+* Fixed Mutex from being shared when its not needed
+* Provide a flat list of txid/iterators to txn in CTxMemPool
+* Get rid of CTxMempool::lookup() entirely
 * Switch CTransaction storage in mempool to std::shared_ptr
 * Split HD chain: external/internal
 * Top up keypool on HD wallet encryption
