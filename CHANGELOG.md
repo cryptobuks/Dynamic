@@ -1,5 +1,7 @@
 **Dynamic v1.4.0.0**
 
+* Kill insecure_random and associated global state
+* Improve INV processing and add feefilter
 * Add OS_WINDOWS_CROSSCOMPILE | NATIVE_WINDOWS to build_detect_platform for 1.19
 * Remove unused code from dbwrapper/dynamic-tx/httpserver/rpcserver/sync/tests
 * Update LevelDB from 1.18 to 1.19
