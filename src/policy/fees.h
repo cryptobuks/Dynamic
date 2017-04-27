@@ -6,6 +6,7 @@
 #define DYNAMIC_POLICYESTIMATOR_H
 
 #include "amount.h"
+#include "random.h"
 #include "uint256.h"
 
 #include <map>
@@ -297,5 +298,6 @@ public:
 
 private:
     std::set<double> feeset;
+    FastRandomContext insecure_rand;
 };
 #endif /*DYNAMIC_POLICYESTIMATOR_H */
