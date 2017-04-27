@@ -1,8 +1,8 @@
 **Dynamic v1.4.0.0**
 
-* Add OS_WINDOWS_CROSSCOMPILE | NATIVE_WINDOWS to build_detect_platform for 1.20
+* Add OS_WINDOWS_CROSSCOMPILE | NATIVE_WINDOWS to build_detect_platform for 1.19
 * Remove unused code from dbwrapper/dynamic-tx/httpserver/rpcserver/sync/tests
-* Update LevelDB from 1.18 to 1.20
+* Update LevelDB from 1.18 to 1.19
 * [QT] Avoid OpenSSL certstore-related memory leak 
 * [QT] Avoid shutdownwindow-related memory leak 
 * Revert until later date
