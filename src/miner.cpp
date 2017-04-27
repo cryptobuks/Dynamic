@@ -431,7 +431,7 @@ std::unique_ptr<CBlockTemplate> CreateNewBlock(const CChainParams& chainparams, 
         }
     }
 
-    return std::move(pblocktemplate);
+    return pblocktemplate.release();
 }
 
 void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce)
