@@ -1488,7 +1488,7 @@ void UnitDisplayStatusBarControl::mousePressEvent(QMouseEvent *event)
 /** Creates context menu, its actions, and wires up all the relevant signals for mouse events. */
 void UnitDisplayStatusBarControl::createContextMenu()
 {
-    menu = new QMenu();
+    menu = new QMenu(this);
     Q_FOREACH(DynamicUnits::Unit u, DynamicUnits::availableUnits())
     {
         QAction *menuAction = new QAction(QString(DynamicUnits::name(u)), this);
