@@ -3,9 +3,12 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "base58.h"
+#include "bip39.h"
 #include "chainparams.h"
 #include "hdchain.h"
-#include "tinyformat.h"
+#include "util.h"
+#include "utilstrencodings.h"
 
 bool CHDChain::SetNull()
 {
@@ -22,11 +25,100 @@ bool CHDChain::IsNull() const
     return vchSeed.empty() || id == uint256();
 }
 
+void CHDChain::Debug()
+{
+    DBG(
+        printf("mnemonic: '%s'\n", std::string(vchMnemonic.begin(), vchMnemonic.end()).c_str());
+        printf("mnemonicpassphrase: '%s'\n", std::string(vchMnemonicPassphrase.begin(), vchMnemonicPassphrase.end()).c_str());
+
+        printf("seed: '%s'\n", HexStr(vchSeed).c_str());
+
+        CExtKey extkey;
+        extkey.SetMaster(&vchSeed[0], vchSeed.size());
+
+        CBitcoinExtKey b58extkey;
+        b58extkey.SetKey(extkey);
+        printf("extended private masterkey: '%s'\n", b58extkey.ToString().c_str());
+
+        CExtPubKey extpubkey;
+        extpubkey = extkey.Neuter();
+
+        CBitcoinExtPubKey b58extpubkey;
+        b58extpubkey.SetKey(extpubkey);
+        printf("extended public masterkey: '%s'\n", b58extpubkey.ToString().c_str());
+    );
+}
+
+bool CHDChain::SetMnemonic(const std::vector<unsigned char>& vchMnemonicIn, const std::vector<unsigned char>& vchMnemonicPassphraseIn, bool fUpdateID)
+{
+    std::vector<unsigned char> vchMnemonicTmp = vchMnemonicIn;
+
+    if (fUpdateID) {
+        // can't (re)set mnemonic if seed was already set
+        if (!IsNull())
+            return false;
+
+        std::string strMnemonic(vchMnemonicIn.begin(), vchMnemonicIn.end());
+        std::string strMnemonicPassphrase(vchMnemonicPassphraseIn.begin(), vchMnemonicPassphraseIn.end());
+
+        // empty mnemonic i.e. "generate a new one"
+        if (vchMnemonicIn.empty()) {
+            strMnemonic = mnemonic_generate(128);
+            vchMnemonicTmp = std::vector<unsigned char>(strMnemonic.begin(), strMnemonic.end());
+        }
+        // NOTE: default mnemonic passphrase is an empty string
+
+        if (!mnemonic_check(strMnemonic.c_str())) {
+            throw std::runtime_error(std::string(__func__) + ": invalid mnemonic: `" + strMnemonic + "`");
+        }
+
+        uint8_t seed[64];
+        mnemonic_to_seed(strMnemonic.c_str(), strMnemonicPassphrase.c_str(), seed, 0);
+        vchSeed = std::vector<unsigned char>(seed, seed + 64);
+        id = GetSeedHash();
+    }
+
+    vchMnemonic = vchMnemonicTmp;
+    vchMnemonicPassphrase = vchMnemonicPassphraseIn;
+
+    Debug();
+
+    return !IsNull();
+}
+
+bool CHDChain::GetMnemonic(std::vector<unsigned char>& vchMnemonicRet, std::vector<unsigned char>& vchMnemonicPassphraseRet) const
+{
+    // mnemonic was not set, fail
+    if (vchMnemonic.empty())
+        return false;
+
+    vchMnemonicRet = vchMnemonic;
+    vchMnemonicPassphraseRet = vchMnemonicPassphrase;
+    return true;
+}
+
+bool CHDChain::GetMnemonic(std::string& strMnemonicRet, std::string& strMnemonicPassphraseRet) const
+{
+    // mnemonic was not set, fail
+    if (vchMnemonic.empty())
+        return false;
+
+    strMnemonicRet = std::string(vchMnemonic.begin(), vchMnemonic.end());
+    strMnemonicPassphraseRet = std::string(vchMnemonicPassphrase.begin(), vchMnemonicPassphrase.end());
+
+    return true;
+}
+
 bool CHDChain::SetSeed(const std::vector<unsigned char>& vchSeedIn, bool fUpdateID)
 {
     vchSeed = vchSeedIn;
-    if (fUpdateID)
+
+    if (fUpdateID) {
         id = GetSeedHash();
+    }
+
+    Debug();
+
     return !IsNull();
 }
 

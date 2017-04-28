@@ -8,7 +8,6 @@
 #include "wallet/wallet.h"
 
 #include "base58.h"
-#include "bip39.h"
 #include "primitives/block.h"
 #include "checkpoints.h"
 #include "chain.h"
@@ -148,10 +147,8 @@ void CWallet::DeriveNewChildKey(CKeyMetadata& metadata, CKey& secret, bool fInte
         throw std::runtime_error(std::string(__func__) + ": GetHDChain failed");
     }
 
-    std::vector<unsigned char> vchSeed = hdChainTmp.GetSeed();
-    if (!DecryptHDChainSeed(vchSeed))
+    if (!DecryptHDChain(hdChainTmp))
         throw std::runtime_error(std::string(__func__) + ": DecryptHDChainSeed failed");
-    hdChainTmp.SetSeed(vchSeed, false);
     // make sure seed matches this chain
     if (hdChainTmp.id != hdChainTmp.GetSeedHash())
         throw std::runtime_error(std::string(__func__) + ": Wrong HD chain!");
@@ -223,10 +220,8 @@ bool CWallet::GetKey(const CKeyID &address, CKey& keyOut) const
         CHDChain hdChainCurrent;
         if (!GetHDChain(hdChainCurrent))
             throw std::runtime_error(std::string(__func__) + ": GetHDChain failed");
-        std::vector<unsigned char> vchSeed = hdChainCurrent.GetSeed();
-        if (!DecryptHDChainSeed(vchSeed))
+        if (!DecryptHDChain(hdChainCurrent))
             throw std::runtime_error(std::string(__func__) + ": DecryptHDChainSeed failed");
-        hdChainCurrent.SetSeed(vchSeed, false);
         // make sure seed matches this chain
         if (hdChainCurrent.id != hdChainCurrent.GetSeedHash())
             throw std::runtime_error(std::string(__func__) + ": Wrong HD chain!");
@@ -787,7 +782,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         }
 
         if (!hdChainCurrent.IsNull()) {
-            assert(EncryptHDChainSeed(vMasterKey));
+            assert(EncryptHDChain(vMasterKey));
 
             CHDChain hdChainCrypted;
             assert(GetHDChain(hdChainCrypted));
@@ -1386,58 +1381,31 @@ CAmount CWallet::GetChange(const CTxOut& txout) const
 
 void CWallet::GenerateNewHDChain()
 {
-    std::string mnemonic;
-    std::vector<unsigned char> vchSeed;
+    CHDChain newHdChain;
+
     std::string strSeed = GetArg("-hdseed", "not hex");
 
     if(mapArgs.count("-hdseed") && IsHex(strSeed)) {
-        vchSeed = ParseHex(strSeed);
-    } else {
-
+        std::vector<unsigned char> vchSeed = ParseHex(strSeed);
+        if (!newHdChain.SetSeed(vchSeed, true))
+            throw std::runtime_error(std::string(__func__) + ": SetSeed failed");
+    }
+    else {
         if (mapArgs.count("-hdseed") && !IsHex(GetArg("-hdseed", "")))
             LogPrintf("CWallet::GenerateNewHDChain -- Incorrect seed, generating random one instead\n");
 
-        if(mapArgs.count("-mnemonic")) {
-            mnemonic = GetArg("-mnemonic", "");
-        } else {
-            mnemonic = mnemonic_generate(128);
-        }
+        // NOTE: empty mnemonic means "generate a new one for me"
+        std::string strMnemonic = GetArg("-mnemonic", "");
+        // NOTE: default mnemonic passphrase is an empty string
+        std::string strMnemonicPassphrase = GetArg("-mnemonicpassphrase", "");
 
-        if(!mnemonic_check(mnemonic.c_str())) {
-            throw std::runtime_error(std::string(__func__) + ": invalid mnemonic");
-        }
-        DBG( printf("mnemonic: '%s'\n", mnemonic.c_str()); );
+        std::vector<unsigned char> vchMnemonic(strMnemonic.begin(), strMnemonic.end());
+        std::vector<unsigned char> vchMnemonicPassphrase(strMnemonicPassphrase.begin(), strMnemonicPassphrase.end());
 
-        // default mnemonic passphrase is an empty string
-        std::string passphrase = GetArg("-mnemonicpassphrase", "");
-        DBG( printf("mnemonicpassphrase: '%s'\n", passphrase.c_str()); );
-
-        uint8_t seed[64];
-        mnemonic_to_seed(mnemonic.c_str(), passphrase.c_str(), seed, 0);
-        vchSeed = std::vector<unsigned char>(seed, seed + 64);
+        if (!newHdChain.SetMnemonic(vchMnemonic, vchMnemonicPassphrase, true))
+            throw std::runtime_error(std::string(__func__) + ": SetMnemonic failed");
     }
 
-    DBG(
-        printf("seed: '%s'\n", HexStr(vchSeed).c_str());
-
-        CExtKey extkey;
-        extkey.SetMaster(&vchSeed[0], vchSeed.size());
-
-        CDynamicExtKey b58extkey;
-        b58extkey.SetKey(extkey);
-        printf("extended private masterkey: '%s'\n", b58extkey.ToString().c_str());
-
-        CExtPubKey extpubkey;
-        extpubkey = extkey.Neuter();
-
-        CDynamicExtPubKey b58extpubkey;
-        b58extpubkey.SetKey(extpubkey);
-        printf("extended public masterkey: '%s'\n", b58extpubkey.ToString().c_str());
-    );
-
-    CHDChain newHdChain;
-    if (!newHdChain.SetSeed(vchSeed, true))
-        throw std::runtime_error(std::string(__func__) + ": SetSeed failed");
     if (!SetHDChain(newHdChain, false))
         throw std::runtime_error(std::string(__func__) + ": SetHDChain failed");
 }
@@ -1477,7 +1445,7 @@ bool CWallet::SetCryptedHDChain(const CHDChain& chain, bool memonly)
     return true;
 }
 
-bool CWallet::GetDecryptedHDChainSeed(std::vector<unsigned char>& vchSeedRet)
+bool CWallet::GetDecryptedHDChain(CHDChain& hdChainRet)
 {
     LOCK(cs_wallet);
 
@@ -1486,15 +1454,14 @@ bool CWallet::GetDecryptedHDChainSeed(std::vector<unsigned char>& vchSeedRet)
         return false;
     }
 
-    std::vector<unsigned char> vchSeed = hdChainTmp.GetSeed();
-    if (!DecryptHDChainSeed(vchSeed))
+    if (!DecryptHDChain(hdChainTmp))
         return false;
-    hdChainTmp.SetSeed(vchSeed, false);
+
     // make sure seed matches this chain
     if (hdChainTmp.id != hdChainTmp.GetSeedHash())
         return false;
 
-    vchSeedRet = vchSeed;
+    hdChainRet = hdChainTmp;
 
     return true;
 }
