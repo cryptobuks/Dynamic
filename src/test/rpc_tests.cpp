@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
     UniValue o1 = ar[0].get_obj();
     UniValue adr = find_value(o1, "address");
     BOOST_CHECK_EQUAL(adr.get_str(), "127.0.0.0/32");
-    BOOST_CHECK_NO_THROW(CallRPC(std::string("setban 127.0.0.0 remove")));;
+    BOOST_CHECK_NO_THROW(CallRPC(std::string("setban 127.0.0.0 remove")));
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("listbanned")));
     ar = r.get_array();
     BOOST_CHECK_EQUAL(ar.size(), 0);
@@ -264,7 +264,7 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
     // must throw an exception because 127.0.0.1 is in already banned suubnet range
     BOOST_CHECK_THROW(r = CallRPC(std::string("setban 127.0.0.1 add")), std::runtime_error);
 
-    BOOST_CHECK_NO_THROW(CallRPC(std::string("setban 127.0.0.0/24 remove")));;
+    BOOST_CHECK_NO_THROW(CallRPC(std::string("setban 127.0.0.0/24 remove")));
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("listbanned")));
     ar = r.get_array();
     BOOST_CHECK_EQUAL(ar.size(), 0);
