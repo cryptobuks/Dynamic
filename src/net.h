@@ -365,8 +365,8 @@ public:
     // b) the peer may tell us in its version message that we should not relay tx invs
     //    unless it loads a bloom filter.
     bool fRelayTxes; //protected by cs_filter
-    // If 'true' this node will be disconnected on CDynodeMan::ProcessDynodeConnections()
-    bool fDynode;
+    bool fSentAddr;
+    bool fDynode; // If 'true' this node will be disconnected on CDynodeMan::ProcessDynodeConnections()
     CSemaphoreGrant grantOutbound;
     CSemaphoreGrant grantDynodeOutbound;
     CCriticalSection cs_filter;
