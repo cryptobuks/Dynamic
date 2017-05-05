@@ -245,7 +245,6 @@ void CDynode::Check(bool fForce)
             return;
         }
 
-        /*
         bool fWatchdogActive = dynodeSync.IsSynced() && dnodeman.IsWatchdogActive();
         bool fWatchdogExpired = (fWatchdogActive && ((GetTime() - nTimeLastWatchdogVote) > DYNODE_WATCHDOG_MAX_SECONDS));
 
@@ -260,7 +259,6 @@ void CDynode::Check(bool fForce)
             }
             return;
         }
-        */
 
         if(!IsPingedWithin(DYNODE_EXPIRATION_SECONDS)) {
             nActiveState = DYNODE_EXPIRED;
